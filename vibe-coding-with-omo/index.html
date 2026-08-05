@@ -1,0 +1,2042 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vibe Coding with OMO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Fraunces:ital,opsz,wght@0,9..40,400..900;1,9..40,400..900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── Design System ───────────────────────────────── */
+:root {
+  --paper: #faf8f4;
+  --page: #ffffff;
+  --ink: #1a1a1a;
+  --ink-mid: #4a4a4a;
+  --ink-light: #7a7a7a;
+  --ink-faint: #a8a8a8;
+  --rule: #e8e4de;
+  --rule-light: #f0ece6;
+
+  --accent: #c0392b;
+  --accent-soft: #fdf0ee;
+  --accent-ghost: rgba(192,57,43,.06);
+
+  --teal: #0e7c6b;
+  --teal-soft: #e6f7f4;
+  --teal-ghost: rgba(14,124,107,.06);
+
+  --gold: #b8860b;
+  --gold-soft: #fdf6e3;
+  --gold-ghost: rgba(184,134,11,.06);
+
+  --purple: #6c3fa0;
+  --purple-soft: #f4eefa;
+  --purple-ghost: rgba(108,63,160,.06);
+
+  --brand: var(--accent);
+  --brand-soft: var(--accent-soft);
+  --brand-ghost: var(--accent-ghost);
+
+  --sans: 'DM Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --serif: 'Fraunces', 'Georgia', serif;
+  --mono: 'JetBrains Mono', monospace;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 999px;
+
+  --shadow-card: 0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.03);
+  --shadow-elevated: 0 4px 12px rgba(0,0,0,.06), 0 2px 4px rgba(0,0,0,.04);
+  --shadow-deep: 0 12px 32px rgba(0,0,0,.08), 0 4px 8px rgba(0,0,0,.04);
+
+  --ease-out: cubic-bezier(.16,1,.3,1);
+  --ease-in-out: cubic-bezier(.65,0,.35,1);
+  --transition-fast: .2s var(--ease-out);
+  --transition-base: .3s var(--ease-out);
+  --transition-slow: .6s var(--ease-out);
+
+  --col-width: 960px;
+}
+
+/* ── Reset & Base ────────────────────────────────── */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.7;
+  background-image:
+    radial-gradient(circle at 20% 0, rgba(192,57,43,.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 100%, rgba(14,124,107,.03) 0%, transparent 50%);
+}
+
+::selection {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+/* ── Top Navigation ──────────────────────────────── */
+.topnav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  background: rgba(250,248,244,.92);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid var(--rule);
+  z-index: 100;
+  padding: var(--space-2) var(--space-8);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+}
+
+.topnav .logo {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: .95rem;
+  color: var(--brand);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.topnav .logo em {
+  font-style: normal;
+  color: var(--ink);
+}
+
+.topnav .nav-links {
+  display: flex;
+  gap: var(--space-6);
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.topnav .nav-links::-webkit-scrollbar { display:none; }
+
+.topnav .nav-links a {
+  color: var(--ink-light);
+  text-decoration: none;
+  font-size: .72rem;
+  font-weight: 500;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  transition: color var(--transition-fast);
+  white-space: nowrap;
+}
+
+.topnav .nav-links a:hover { color: var(--brand); }
+
+/* ── Hero ────────────────────────────────────────── */
+.hero {
+  max-width: var(--col-width);
+  margin: 0 auto;
+  padding: calc(80px + var(--space-16)) var(--space-8) var(--space-16);
+  text-align: center;
+  position: relative;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background: var(--brand);
+}
+
+.hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -.02em;
+  color: var(--ink);
+  margin-bottom: var(--space-4);
+}
+
+.hero h1 em {
+  font-style: italic;
+  color: var(--brand);
+}
+
+.hero .subtitle {
+  font-size: 1.05rem;
+  color: var(--ink-mid);
+  max-width: 520px;
+  margin: 0 auto var(--space-6);
+  line-height: 1.6;
+}
+
+.hero .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--page);
+  border: 1px solid var(--rule);
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--radius-full);
+  font-size: .75rem;
+  font-family: var(--mono);
+  font-weight: 500;
+  color: var(--ink-light);
+  box-shadow: var(--shadow-card);
+}
+
+.hero .badge span {
+  color: var(--brand);
+}
+
+/* ── Main Content ────────────────────────────────── */
+.page {
+  max-width: var(--col-width);
+  margin: 0 auto;
+  padding: 0 var(--space-8) var(--space-16);
+}
+
+/* ── Chapters ────────────────────────────────────── */
+.chapter {
+  margin: var(--space-16) 0;
+  animation: fadeUp .8s var(--ease-out) both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Chapter number + heading */
+.ch-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+  padding-bottom: var(--space-3);
+  border-bottom: 2px solid var(--rule);
+}
+
+.ch-num {
+  font-family: var(--serif);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--brand);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ch-title {
+  font-family: var(--serif);
+  font-size: clamp(1.5rem, 3vw, 1.9rem);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -.01em;
+  color: var(--ink);
+}
+
+/* Sub-heading */
+.sec-title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin: var(--space-10) 0 var(--space-4);
+}
+
+.sec-title .sec-num {
+  font-family: var(--mono);
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--teal);
+  flex-shrink: 0;
+}
+
+.sec-title h3 {
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ── Typography ──────────────────────────────────── */
+p {
+  margin-bottom: var(--space-4);
+  color: var(--ink-mid);
+  max-width: 68ch;
+}
+
+code {
+  font-family: var(--mono);
+  font-size: .85em;
+  background: var(--rule-light);
+  padding: .1em .35em;
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+}
+
+pre {
+  background: var(--page);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6) var(--space-8);
+  overflow-x: auto;
+  margin: var(--space-6) 0;
+  box-shadow: var(--shadow-card);
+  position: relative;
+}
+
+pre::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--brand), var(--gold), var(--teal));
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: .8rem;
+  line-height: 1.8;
+  color: var(--ink-mid);
+}
+
+/* ── Tables ──────────────────────────────────────── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--space-6) 0;
+  background: var(--page);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--rule);
+  font-size: .88rem;
+}
+
+thead th {
+  background: var(--rule-light);
+  color: var(--ink-mid);
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  font-weight: 600;
+  font-size: .72rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--rule);
+}
+
+tbody td {
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--rule-light);
+  color: var(--ink-mid);
+  vertical-align: top;
+}
+
+tbody tr {
+  transition: background var(--transition-fast);
+}
+
+tbody tr:hover {
+  background: var(--brand-ghost);
+}
+
+/* ── Stat Cards ──────────────────────────────────── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-8) 0;
+}
+
+.stat-card {
+  background: var(--page);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6) var(--space-6);
+  text-align: center;
+  box-shadow: var(--shadow-card);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-elevated);
+}
+
+.stat-card .num {
+  font-family: var(--serif);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--brand);
+  line-height: 1;
+}
+
+.stat-card .label {
+  margin-top: var(--space-1);
+  font-size: .78rem;
+  color: var(--ink-light);
+  font-weight: 500;
+}
+
+.stat-card .stat-sub {
+  margin-top: var(--space-1);
+  font-size: .62rem;
+  color: var(--ink-light);
+  font-family: var(--mono);
+  line-height: 1.4;
+}
+
+/* ── Agent Layer Diagram ─────────────────────────── */
+.layer-group {
+  margin: var(--space-6) 0;
+}
+
+.layer-label {
+  font-family: var(--mono);
+  font-size: .65rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: var(--space-3);
+  padding-left: var(--space-2);
+}
+
+.agent-row {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin: var(--space-4) 0;
+}
+
+.agent-tag {
+  display: flex;
+  flex-direction: column;
+  background: var(--page);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-5);
+  min-width: 150px;
+  flex: 1;
+  box-shadow: var(--shadow-card);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.agent-tag:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-elevated);
+}
+
+.agent-tag .name {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: .95rem;
+  color: var(--ink);
+}
+
+.agent-tag .role {
+  font-size: .72rem;
+  color: var(--ink-light);
+  margin-top: var(--space-1);
+}
+
+.agent-tag .model {
+  margin-top: var(--space-3);
+  font-family: var(--mono);
+  font-size: .68rem;
+  font-weight: 500;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.agent-tag.planning { border-color: var(--purple); }
+.agent-tag.planning .model { background: var(--purple-soft); color: var(--purple); }
+
+.agent-tag.execution { border-color: var(--teal); }
+.agent-tag.execution .model { background: var(--teal-soft); color: var(--teal); }
+
+.agent-tag.worker { border-color: var(--gold); }
+.agent-tag.worker .model { background: var(--gold-soft); color: var(--gold); }
+
+/* ── E2E Animated Flow ───────────────────────────── */
+.flow-container {
+  position: relative;
+  margin: var(--space-8) 0;
+}
+
+.flow-phase {
+  position: relative;
+  background: var(--page);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6) var(--space-8);
+  margin-bottom: var(--space-2);
+  opacity: 0;
+  transform: translateX(-20px);
+  animation: flowSlide .6s var(--ease-out) forwards;
+  box-shadow: var(--shadow-card);
+}
+
+.flow-phase:nth-child(1) { animation-delay: .1s; }
+.flow-phase:nth-child(3) { animation-delay: .3s; }
+.flow-phase:nth-child(5) { animation-delay: .5s; }
+.flow-phase:nth-child(7) { animation-delay: .7s; }
+.flow-phase:nth-child(9) { animation-delay: .9s; }
+
+@keyframes flowSlide {
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.flow-phase .phase-tag {
+  font-family: var(--mono);
+  font-size: .65rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  display: inline-block;
+  margin-bottom: var(--space-2);
+}
+
+.flow-phase .phase-tag.auto { background: var(--purple-soft); color: var(--purple); }
+.flow-phase .phase-tag.user { background: var(--gold-soft); color: var(--gold); }
+.flow-phase .phase-tag.both { background: var(--teal-soft); color: var(--teal); }
+
+.flow-phase h4 {
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: var(--space-2) 0;
+}
+
+.flow-phase ul {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-2) 0 0;
+}
+
+.flow-phase li {
+  font-size: .85rem;
+  color: var(--ink-mid);
+  padding: var(--space-1) 0;
+  padding-left: var(--space-4);
+  position: relative;
+}
+
+.flow-phase li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--brand);
+  font-weight: 700;
+}
+
+/* Animated connector arrows */
+.flow-connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  position: relative;
+}
+
+.flow-connector .arrow-line {
+  width: 2px;
+  height: 100%;
+  background: var(--rule);
+  position: relative;
+  overflow: hidden;
+}
+
+.flow-connector .arrow-line::after {
+  content: '';
+  position: absolute;
+  top: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, var(--brand));
+  animation: arrowPulse 1.5s var(--ease-in-out) infinite;
+}
+
+@keyframes arrowPulse {
+  0% { top: -100%; }
+  50% { top: 0; }
+  100% { top: 100%; }
+}
+
+.flow-connector .arrow-tip {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid var(--brand);
+  animation: tipPulse 1.5s var(--ease-in-out) infinite .4s;
+}
+
+@keyframes tipPulse {
+  0%, 50% { opacity: 1; }
+  75%, 100% { opacity: .3; }
+}
+
+.flow-connector .connector-label {
+  position: absolute;
+  left: calc(50% + 16px);
+  transform: translateY(-50%);
+  font-size: .72rem;
+  color: var(--ink-faint);
+  font-style: italic;
+  white-space: nowrap;
+}
+
+/* ── 2-Row CICD Flow Layout ──────────────────────── */
+.cicd-flow-two-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) 0;
+  margin: var(--space-6) 0;
+  margin-left: calc(-1 * var(--space-8));
+  margin-right: calc(-1 * var(--space-8));
+  padding-left: var(--space-8);
+  padding-right: var(--space-8);
+}
+.cicd-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  width: 100%;
+}
+.cicd-down-connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 40px;
+  position: relative;
+  animation: vertPulse 2s ease-in-out infinite;
+  animation-delay: 2.05s;
+  opacity: 0;
+  animation-fill-mode: forwards;
+}
+.cicd-down-connector .vert-line {
+  width: 3px;
+  height: 20px;
+  background: linear-gradient(to bottom, var(--brand), transparent);
+  border-radius: 2px;
+}
+.cicd-down-connector .vert-tip {
+  font-size: 0.7rem;
+  color: var(--brand);
+  margin-top: 2px;
+}
+@keyframes vertPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* Origin box: OpenCode + OMO */
+.cicd-origin-box {
+  background: linear-gradient(135deg, var(--brand-soft), var(--gold-soft));
+  border: 2px solid var(--brand);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-8);
+  text-align: center;
+  box-shadow: var(--shadow-elevated);
+  animation: fadeUp .6s var(--ease-out) .2s both;
+}
+.cicd-origin-box .origin-icon {
+  font-size: 1.4rem;
+  margin-bottom: var(--space-1);
+}
+.cicd-origin-box .origin-title {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--ink);
+}
+.cicd-origin-box .origin-desc {
+  font-size: .8rem;
+  color: var(--ink-mid);
+  margin-top: var(--space-1);
+}
+.cicd-top-connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 40px;
+  animation: vertPulse 2s ease-in-out infinite;
+  animation-delay: .5s;
+  opacity: 0;
+  animation-fill-mode: forwards;
+}
+.cicd-top-connector .vert-line {
+  width: 3px;
+  height: 20px;
+  background: linear-gradient(to bottom, var(--gold), var(--brand));
+  border-radius: 2px;
+}
+.cicd-top-connector .vert-tip {
+  font-size: 0.7rem;
+  color: var(--brand);
+  margin-top: 2px;
+}
+
+.cicd-step {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.cicd-step .step-card {
+  background: var(--page);
+  border: 1.5px solid var(--rule);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-5);
+  min-width: 130px;
+  text-align: center;
+  box-shadow: var(--shadow-card);
+  transition: transform var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base);
+  opacity: 0;
+  animation: cicdReveal .5s var(--ease-out) forwards;
+}
+
+.cicd-step .step-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-elevated);
+  border-color: var(--teal);
+}
+
+.cicd-row.top-row .cicd-step:nth-child(1) .step-card { animation-delay: 1.5s; }
+.cicd-row.top-row .cicd-step:nth-child(3) .step-card { animation-delay: 1.65s; }
+.cicd-row.top-row .cicd-step:nth-child(5) .step-card { animation-delay: 1.8s; }
+.cicd-row.top-row .cicd-step:nth-child(7) .step-card { animation-delay: 1.95s; }
+.cicd-row.bottom-row .cicd-step:nth-child(1) .step-card { animation-delay: 2.2s; }
+.cicd-row.bottom-row .cicd-step:nth-child(3) .step-card { animation-delay: 2.35s; }
+.cicd-row.bottom-row .cicd-step:nth-child(5) .step-card { animation-delay: 2.5s; }
+
+@keyframes cicdReveal {
+  from { opacity: 0; transform: translateY(10px) scale(.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.cicd-step .step-card .icon {
+  font-size: 1.4rem;
+  margin-bottom: var(--space-1);
+}
+
+.cicd-step .step-card .step-name {
+  font-family: var(--mono);
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.cicd-step .step-card .step-desc {
+  font-size: .65rem;
+  color: var(--ink-light);
+  margin-top: var(--space-1);
+}
+
+.cicd-arrow {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 100%;
+  position: relative;
+  opacity: 0;
+  animation: arrowReveal .3s var(--ease-out) forwards;
+}
+
+.cicd-row.top-row .cicd-arrow:nth-of-type(2) { animation-delay: 1.57s; }
+.cicd-row.top-row .cicd-arrow:nth-of-type(4) { animation-delay: 1.72s; }
+.cicd-row.top-row .cicd-arrow:nth-of-type(6) { animation-delay: 1.87s; }
+.cicd-row.bottom-row .cicd-arrow:nth-of-type(2) { animation-delay: 2.27s; }
+.cicd-row.bottom-row .cicd-arrow:nth-of-type(4) { animation-delay: 2.42s; }
+
+@keyframes arrowReveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.cicd-arrow .horiz-line {
+  width: 100%;
+  height: 2px;
+  background: var(--rule);
+  position: relative;
+  overflow: hidden;
+}
+
+.cicd-arrow .horiz-line::after {
+  content: '';
+  position: absolute;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(to right, transparent, var(--brand));
+  animation: horizFlow 2s linear infinite;
+}
+
+@keyframes horizFlow {
+  0% { left: -60%; }
+  100% { left: 100%; }
+}
+
+.cicd-arrow .horiz-tip {
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 7px solid var(--brand);
+}
+
+/* ── Cards ────────────────────────────────────────── */
+.card {
+  background: var(--page);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6) var(--space-8);
+  margin: var(--space-4) 0;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--transition-base);
+}
+
+.card:hover { box-shadow: var(--shadow-elevated); }
+
+.card.highlight {
+  border-left: 4px solid var(--brand);
+}
+
+.card.teal { border-color: var(--teal); border-left: 4px solid var(--teal); }
+.card.gold { border-color: var(--gold); border-left: 4px solid var(--gold); }
+.card.purple { border-color: var(--purple); border-left: 4px solid var(--purple); }
+
+.card h4 {
+  font-family: var(--serif);
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: var(--space-3);
+}
+
+/* ── Wave Cards ─────────────────────────────────── ─ */
+.wave-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+  margin: var(--space-6) 0;
+}
+
+.wave-card {
+  background: var(--page);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-6);
+  box-shadow: var(--shadow-card);
+  border-top: 3px solid var(--rule);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.wave-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-elevated);
+}
+
+.wave-card.w1 { border-top-color: var(--teal); }
+.wave-card.w2 { border-top-color: var(--gold); }
+.wave-card.w3 { border-top-color: var(--brand); }
+.wave-card.wf { border-top-color: var(--accent); background: var(--accent-ghost); }
+
+.wave-card h4 {
+  font-family: var(--mono);
+  font-size: .85rem;
+  font-weight: 700;
+  margin-bottom: var(--space-3);
+}
+
+.wave-card .task-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.wave-card .task-chip {
+  font-family: var(--mono);
+  font-size: .7rem;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--rule);
+  background: var(--rule-light);
+  color: var(--ink-mid);
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.wave-card .task-chip:hover {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+/* ── Callouts ────────────────────────────────────── */
+.callout {
+  padding: var(--space-5) var(--space-6);
+  border-radius: var(--radius-md);
+  margin: var(--space-6) 0;
+  font-size: .88rem;
+  line-height: 1.65;
+}
+
+.callout.info {
+  background: var(--teal-soft);
+  border-left: 4px solid var(--teal);
+  color: var(--teal);
+}
+
+.callout.warn {
+  background: var(--gold-soft);
+  border-left: 4px solid var(--gold);
+  color: var(--gold);
+}
+
+.callout.note {
+  background: var(--purple-soft);
+  border-left: 4px solid var(--purple);
+  color: var(--purple);
+}
+
+.callout code {
+  background: rgba(0,0,0,.06);
+  border: none;
+}
+
+/* ── Inline badge ────────────────────────────────── */
+.badge-sm {
+  display: inline-block;
+  font-size: .68rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  vertical-align: middle;
+}
+
+.badge-sm.green { background: var(--teal-soft); color: var(--teal); }
+.badge-sm.amber { background: var(--gold-soft); color: var(--gold); }
+.badge-sm.red { background: var(--accent-soft); color: var(--brand); }
+
+/* ── AI Summary Bubble ───────────────────────────── */
+.summary-bubble {
+  background: linear-gradient(135deg, var(--purple-soft) 0%, var(--teal-soft) 100%);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--purple);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6) var(--space-8);
+  margin: var(--space-8) 0 var(--space-6);
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+  animation: fadeUp .6s var(--ease-out) .1s both;
+}
+
+.summary-bubble::before {
+  content: '';
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 80px; height: 80px;
+  background: radial-gradient(circle, rgba(108,63,160,.08) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.summary-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--mono);
+  font-size: .65rem;
+  font-weight: 600;
+  color: var(--purple);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: var(--space-2);
+}
+
+.summary-label .dot {
+  width: 6px; height: 6px;
+  background: var(--purple);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.summary-bubble p {
+  font-family: var(--serif);
+  font-size: .95rem;
+  line-height: 1.7;
+  color: var(--ink);
+  margin: 0;
+}
+
+/* ── Chapter Question Bubble — matches AI Summary style ── */
+.question-bubble {
+  background: linear-gradient(135deg, var(--purple-soft) 0%, var(--teal-soft) 100%);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--purple);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6) var(--space-8);
+  margin: var(--space-6) 0 var(--space-2);
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+  animation: fadeUp .6s var(--ease-out) .15s both;
+}
+
+.question-bubble::before {
+  content: '';
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 80px; height: 80px;
+  background: radial-gradient(circle, rgba(108,63,160,.08) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.question-bubble p {
+  font-family: var(--serif);
+  font-size: .95rem;
+  line-height: 1.7;
+  color: var(--ink);
+  margin: 0;
+}
+
+/* ── Tool grid ───────────────────────────────────── */
+.tool-box {
+  background: var(--page);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  margin: var(--space-6) 0;
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+}
+
+.tool-box::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--purple), var(--teal), var(--gold), var(--brand));
+}
+
+.tool-box-title {
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: var(--space-6);
+}
+
+/* ── Skills grid ─────────────────────────────────── */
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-6) 0;
+}
+
+.skill-card {
+  background: var(--page);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-6);
+  box-shadow: var(--shadow-card);
+  transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+}
+
+.skill-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-elevated);
+  border-color: var(--teal);
+}
+
+.skill-card .skill-name {
+  font-family: var(--mono);
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: var(--space-1);
+}
+
+.skill-card .skill-use {
+  font-size: .72rem;
+  color: var(--teal);
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+}
+
+.skill-card .skill-desc {
+  font-size: .78rem;
+  color: var(--ink-light);
+  line-height: 1.5;
+}
+
+/* ── Lessons list ────────────────────────────────── */
+.lesson-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--rule-light);
+  font-size: .85rem;
+  background: var(--page);
+  transition: background var(--transition-fast);
+}
+
+.lesson-row:first-of-type { border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.lesson-row:last-of-type { border-radius: 0 0 var(--radius-lg) var(--radius-lg); border-bottom: 1px solid var(--rule); }
+.lesson-row:hover { background: var(--brand-ghost); }
+
+.lesson-row .problem { color: var(--brand); font-weight: 600; }
+.lesson-row .root { color: var(--gold); }
+.lesson-row .fix { color: var(--ink-mid); }
+
+/* ── Footer ──────────────────────────────────────── */
+.footer {
+  max-width: var(--col-width);
+  margin: 0 auto;
+  padding: var(--space-8);
+  text-align: center;
+  border-top: 1px solid var(--rule);
+  font-size: .72rem;
+  color: var(--ink-faint);
+}
+
+/* ── Responsive ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .topnav { padding: var(--space-2) var(--space-4); }
+  .hero { padding: calc(80px + var(--space-12)) var(--space-4) var(--space-12); }
+  .page { padding: 0 var(--space-4) var(--space-12); }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .agent-row { flex-direction: column; }
+  .wave-grid { grid-template-columns: 1fr; }
+  .skills-grid { grid-template-columns: 1fr; }
+  .lesson-row { grid-template-columns: 1fr; gap: var(--space-1); }
+  .cicd-flow-two-row { margin-left: calc(-1 * var(--space-4)); margin-right: calc(-1 * var(--space-4)); padding-left: var(--space-4); padding-right: var(--space-4); }
+  .cicd-step .step-card { min-width: 110px; padding: var(--space-3) var(--space-4); }
+  table { font-size: .78rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Navigation ──────────────────────────────────── -->
+<nav class="topnav">
+  <div class="logo"><em>OMO</em> Guide</div>
+  <div class="nav-links">
+    <a href="#c1">概览</a>
+    <a href="#c2">架构</a>
+    <a href="#c3">工作流</a>
+    <a href="#c4">CICD Skills</a>
+    <a href="#c5">/ulw</a>
+    <a href="#c6">经验</a>
+    <a href="#c7">速查</a>
+    <a href="#c8">技术栈</a>
+  </div>
+</nav>
+
+<!-- ── Hero ────────────────────────────────────────── -->
+<header class="hero">
+  <h1>Vibe Coding <em>with OMO</em></h1>
+  <p class="subtitle">Opencode + OhMyOpenAgent — 从 Plan 到 E2E 部署的完整工作流</p>
+  <div class="badge"><span>2026.04.01</span> — 2026.06.03 <span>·</span> 约 2 个月</div>
+</header>
+
+<!-- ── Page Content ──────────────────────────────── -->
+<main class="page">
+
+<!-- ── AI Summary ─────────────────────────────────── -->
+<div class="summary-bubble">
+  <div class="summary-label"><span class="dot"></span> AI 摘要</div>
+  <p>
+    本文档记录了使用 opencode + OhMyOpenAgent 进行 vibe coding 的完整工作流：从 Prometheus 需求访谈到 cicd-fullchain 全链路部署。2 个月内交付 5 个 xxx-service 服务到生产，343 次 commit 通过自研 9 个 CICD Skills 和 ops-dev agent 自动部署至 Kubernetes。
+  </p>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     CHAPTER 1 — 统计数据概览 (restructured)
+     ═══════════════════════════════════════════════ -->
+<article class="chapter" id="c1">
+  <div class="ch-head">
+    <span class="ch-num">Chapter 01</span>
+    <span class="ch-title">概览 · 架构 · 数据</span>
+  </div>
+
+  <!-- 1.1 What is OpenCode -->
+  <div class="sec-title">
+    <span class="sec-num">1.1</span>
+    <h3>What is OpenCode</h3>
+  </div>
+  <p>
+    OpenCode 是运行在终端的 AI 编程助手 — 它是 <b style="color:var(--ink)">"壳" (the shell)</b>。提供多 agent 协作、后台并行任务、LSP 集成、技能 (Skills) 系统。它本身是一个通用框架，通过插件和 subagent 扩展能力。
+  </p>
+  <p style="font-size:.85rem;color:var(--ink-mid)">
+    官网: <a href="https://opencode.ai/" target="_blank" rel="noopener" style="color:var(--brand);text-decoration:underline">opencode.ai</a>
+  </p>
+  <div class="callout note">
+    <b>核心定位</b>：终端 AI 编程助手，是 OhMyOpenAgent 的宿主环境。没有 OpenCode，OMO 无从运行。
+  </div>
+
+  <!-- 1.2 What is OMO -->
+  <div class="sec-title">
+    <span class="sec-num">1.2</span>
+    <h3>What is OhMyOpenAgent (OMO)</h3>
+  </div>
+  <p>
+    OhMyOpenAgent (OMO) 是 OpenCode 的 <b style="color:var(--brand)">插件</b>，为 OpenCode 添加多 agent 编排能力 — 11 个专业 agent、并行任务执行、多模型自动路由。
+  </p>
+  <p style="font-size:.85rem;color:var(--ink-mid)">
+    GitHub: <a href="https://github.com/code-yeongyu/oh-my-openagent" target="_blank" rel="noopener" style="color:var(--brand);text-decoration:underline">code-yeongyu/oh-my-openagent</a>
+  </p>
+
+  <div class="callout info">
+    <b>类比</b>：就像 <code>oh-my-zsh</code> 是 <code>zsh</code> 的插件集 — zsh 本身已经是功能完整的 shell，但 oh-my-zsh 添加了主题、插件、自动补全、命令别名，让它从"可用"升级到"好用"。
+    <br><br>
+    同样地，<b>OpenCode = zsh</b>（基础能力），<b>OMO = oh-my-zsh</b>（编排层）。
+  </div>
+  <p>
+    安装仅需一条命令：<code>bunx oh-my-openagent install</code>。安装后，OpenCode 获得 11 个专业 agent，覆盖从需求访谈、计划审查、代码编写到运维部署的完整链路。
+  </p>
+
+  <!-- 1.3 Project Stats -->
+  <div class="sec-title">
+    <span class="sec-num">1.3</span>
+    <h3>vibe coding 实践统计</h3>
+  </div>
+  <p>两个月的产出，浓缩成数字。</p>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="num">343</div>
+      <div class="label">开发 Commits</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">5</div>
+      <div class="label">Active 服务</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">155</div>
+      <div class="label">GitOps MRs</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">363</div>
+      <div class="label">Pipeline 执行</div>
+      <div class="stat-sub">来源: push 316 + MR事件 24 + API触发 23</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">25</div>
+      <div class="label">工作计划 Plans</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">9</div>
+      <div class="label">自创 Skills</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">15</div>
+      <div class="label">Releases</div>
+    </div>
+  </div>
+
+  <div class="callout note" style="margin-top:var(--space-5)">
+    <b>注</b> — Pipeline (363) > Commits (343) 的原因：<br>
+    <span style="font-family:var(--mono);font-size:.7rem">24</span> 次 MR 事件 pipeline（创建/更新 MR 时触发） +
+    <span style="font-family:var(--mono);font-size:.7rem">23</span> 次 API 触发（xxx-registry 手动重跑） +
+    batch push 多次 commit 共享一个 pipeline（如 sma-simulator: 54 commits → 12 pipelines）。
+  </div>
+</article>
+
+<!-- ═══════════════════════════════════════════════
+     CHAPTER 2 — The Tool Stack (restructured)
+     ═══════════════════════════════════════════════ -->
+<article class="chapter" id="c2">
+  <div class="ch-head">
+    <span class="ch-num">Chapter 02</span>
+    <span class="ch-title">Inside OMO: The Agent Architecture</span>
+  </div>
+
+  <div class="question-bubble">
+    <p>"OpenCode 只是个终端 AI，怎么能同时写代码、审查计划、部署上线？它背后是怎么组织多个 agent 协作的？"</p>
+  </div>
+
+  <p>
+    Prometheus 和 Sisyphus-Junior <b>都是 OMO 的组成部分</b>，不是独立的工具。OMO 内部采用 3 层架构，11 个专业 agent 各司其职。
+  </p>
+
+  <div class="tool-box">
+    <div class="tool-box-title">OpenCode + OhMyOpenAgent</div>
+
+    <!-- Planning Layer -->
+    <div class="layer-group">
+      <div class="layer-label">▎Planning Layer — 规划层</div>
+      <div class="agent-row">
+        <div class="agent-tag planning">
+          <span class="name">Prometheus</span>
+          <span class="role">需求访谈 → 计划生成，READ-ONLY</span>
+          <span class="model">claude-opus-4-7</span>
+        </div>
+        <div class="agent-tag planning">
+          <span class="name">Metis</span>
+          <span class="role">计划分析，检查遗漏 / guardrails / scope creep</span>
+          <span class="model">多模型路由</span>
+        </div>
+        <div class="agent-tag planning">
+          <span class="name">Momus</span>
+          <span class="role">计划审查，循环质检直到 "OKAY"</span>
+          <span class="model">多模型路由</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Execution Layer -->
+    <div class="layer-group">
+      <div class="layer-label">▎Execution Layer — 执行层</div>
+      <div class="agent-row">
+        <div class="agent-tag execution">
+          <span class="name">Sisyphus</span>
+          <span class="role">主编排器，按 wave 分发任务给 specialist agents</span>
+          <span class="model">多模型路由</span>
+        </div>
+        <div class="agent-tag execution">
+          <span class="name">Atlas</span>
+          <span class="role">执行层 agent</span>
+          <span class="model">多模型路由</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Worker Layer -->
+    <div class="layer-group">
+      <div class="layer-label">▎Worker Layer — 工作层</div>
+      <div class="agent-row">
+        <div class="agent-tag worker">
+          <span class="name">Sisyphus-Junior</span>
+          <span class="role">代码编写主力，不可委托， obsessively 跟踪 todos</span>
+          <span class="model">claude-sonnet-4-6</span>
+        </div>
+        <div class="agent-tag worker">
+          <span class="name">Hephaestus</span>
+          <span class="role">Worker 层 agent</span>
+          <span class="model">多模型路由</span>
+        </div>
+        <div class="agent-tag worker">
+          <span class="name">Oracle</span>
+          <span class="role">深度推理，架构咨询 / 复杂逻辑</span>
+          <span class="model">多模型路由</span>
+        </div>
+        <div class="agent-tag worker">
+          <span class="name">Librarian</span>
+          <span class="role">文档查询，查官方文档和 best practices</span>
+          <span class="model">多模型路由</span>
+        </div>
+        <div class="agent-tag worker">
+          <span class="name">Explore</span>
+          <span class="role">代码搜索，查代码库中相似实现</span>
+          <span class="model">多模型路由</span>
+        </div>
+        <div class="agent-tag worker">
+          <span class="name">Multimodal-Looker</span>
+          <span class="role">多模态 agent</span>
+          <span class="model">多模型路由</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout info" style="margin-top:var(--space-6);margin-bottom:0">
+      <b>自动模型路由</b>：OMO 根据任务 category 自动选择最优模型。例如：<code>visual-engineering → gemini-3.1-pro</code>, <code>ultrabrain → gpt-5.5</code>, <code>deep → gpt-5.4</code>, <code>quick → gpt-5.4-mini</code> 等。用户只需声明 category，无需手动选模型。
+    </div>
+  </div>
+
+  <div class="sec-title">
+    <span class="sec-num">2.1</span>
+    <h3>支持工具 — LSP · AST-grep · Task/Delegation</h3>
+  </div>
+  <p>除了 OMO agent 体系，OpenCode 还提供了以下核心工具，共同构成完整工程能力：</p>
+
+  <div class="wave-grid">
+    <div class="card teal">
+      <h4>LSP 集成</h4>
+      <p style="color:var(--ink-light);font-size:.85rem;margin:0">语言服务器协议 — 代码跳转、引用查找、符号重命名、诊断检查。所有 IDE 级操作在终端完成。</p>
+    </div>
+    <div class="card gold">
+      <h4>AST-grep</h4>
+      <p style="color:var(--ink-light);font-size:.85rem;margin:0">AST 感知的代码模式搜索和替换。支持 25 种语言，用于大规模重构和跨文件代码修改。</p>
+    </div>
+    <div class="card purple">
+      <h4>Task / 委派系统</h4>
+      <p style="color:var(--ink-light);font-size:.85rem;margin:0">多 agent 并行任务分发 — 主 agent 将独立任务分发给 explore、librarian、build、ops-dev 等专业 agent，并行执行后聚合结果。</p>
+    </div>
+  </div>
+</article>
+
+<!-- ═══════════════════════════════════════════════
+     CHAPTER 3 — E2E Workflow (animated diagrams)
+     ═══════════════════════════════════════════════ -->
+<article class="chapter" id="c3">
+  <div class="ch-head">
+    <span class="ch-num">Chapter 03</span>
+    <span class="ch-title">E2E 完整工作流</span>
+  </div>
+
+  <div class="question-bubble">
+    <p>"我有一个新功能要开发，从说需求到代码跑在 K8s 上，整个流程是怎样的？中间需要我做什么操作？"</p>
+  </div>
+
+  <!-- ══ Animated Vertical Flow: Phases 1-4 ══ -->
+  <div class="sec-title">
+    <span class="sec-num">3.1</span>
+    <h3>Phase 1 → Phase 4: 需求到部署</h3>
+  </div>
+
+  <div class="flow-container">
+    <!-- Phase 1 -->
+    <div class="flow-phase">
+      <span class="phase-tag auto">Auto</span>
+      <h4>Phase 1: PROMETHEUS 需求访谈</h4>
+      <ul>
+        <li>理解需求 &amp; 边界</li>
+        <li>3 个并行 agent: librarian + explore × 2</li>
+        <li>librarian 查文档, explore 查相似实现、测试基础设施</li>
+        <li>记录到 <code>.sisyphus/drafts/{name}.md</code></li>
+      </ul>
+    </div>
+    <div class="flow-connector">
+      <div class="arrow-line"></div>
+      <div class="arrow-tip"></div>
+      <span class="connector-label">需求清晰 → Clearance Check 通过 → 自动生成计划</span>
+    </div>
+
+    <!-- Phase 2 -->
+    <div class="flow-phase">
+      <span class="phase-tag auto">Auto</span>
+      <h4>Phase 2: METIS 计划分析</h4>
+      <ul>
+        <li>检查遗漏问题</li>
+        <li>识别 scope creep</li>
+        <li>补充 guardrails</li>
+        <li>缺失的验收标准</li>
+      </ul>
+    </div>
+    <div class="flow-connector">
+      <div class="arrow-line"></div>
+      <div class="arrow-tip"></div>
+      <span class="connector-label">计划生成到 .sisyphus/plans/{name}.md</span>
+    </div>
+
+    <!-- Phase 3 -->
+    <div class="flow-phase">
+      <span class="phase-tag user">用户高精度模式</span>
+      <h4>Phase 3: MOMUS 计划审查</h4>
+      <ul>
+        <li>≥90% 任务有验收标准</li>
+        <li>所有文件引用已验证</li>
+        <li>零业务逻辑假设</li>
+        <li>循环直到 "OKAY" — 没有妥协</li>
+      </ul>
+    </div>
+    <div class="flow-connector">
+      <div class="arrow-line"></div>
+      <div class="arrow-tip"></div>
+      <span class="connector-label">Momus 说 "OKAY" → 计划就绪</span>
+    </div>
+
+    <!-- Phase 4 -->
+    <div class="flow-phase">
+      <span class="phase-tag both">用户触发</span>
+      <h4>Phase 4: /start-work — Sisyphus 并行执行</h4>
+      <ul>
+        <li>Wave 1: 并行 scaffolding — 7 个任务并发</li>
+        <li>Wave 2: 并行核心模块 — 7 个任务并发</li>
+        <li>Wave 3: 集成 — 6 个任务并发</li>
+        <li>Wave Final: 4 agent 审稿 — F1-F4 4 路并行</li>
+      </ul>
+    </div>
+    <div class="flow-connector">
+      <div class="arrow-line"></div>
+      <div class="arrow-tip"></div>
+      <span class="connector-label">全部通过 → 用户确认</span>
+    </div>
+
+    <!-- Phase Transition to CICD -->
+    <div class="flow-phase" style="border-color:var(--teal);background:var(--teal-ghost)">
+      <span class="phase-tag auto" style="background:var(--teal-soft);color:var(--teal)">Phase 5</span>
+      <h4 style="color:var(--teal)">Phase 5: CICD 全链路部署 (下方详解)</h4>
+      <ul>
+        <li>commit + pre-commit gate → git push → pipeline</li>
+        <li>↓ 详见下方 CICD 水平流程图</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══ Phase 1-4 Detail Sections ══ -->
+  <div class="sec-title">
+    <span class="sec-num">3.2</span>
+    <h3>Phase 1 详解 — 意图分类与带证据提问</h3>
+  </div>
+
+  <h4 style="font-family:var(--serif);font-size:.95rem;margin-bottom:var(--space-3)">意图分类</h4>
+  <table>
+    <thead><tr><th>类型</th><th>特征</th><th>策略</th></tr></thead>
+    <tbody>
+      <tr><td><b>Build from Scratch</b></td><td>新功能/从零开始</td><td>librarian 查文档 + explore 查相似实现</td></tr>
+      <tr><td><b>Refactoring</b></td><td>"refactor/restructure"</td><td>explore 查调用链 + 测试覆盖率</td></tr>
+      <tr><td><b>Architecture</b></td><td>系统设计/基础设施</td><td>explore 查依赖图 + Oracle 咨询</td></tr>
+      <tr><td><b>Mid-sized</b></td><td>明确范围的功能</td><td>重点问边界和排除项</td></tr>
+    </tbody>
+  </table>
+
+  <h4 style="font-family:var(--serif);font-size:.95rem;margin:var(--space-6) 0 var(--space-3)">Pre-Interview Research (并行 3 agent)</h4>
+  <pre><code>librarian: 查官方文档、API 参考、production best practices, 跳过入门教程
+explore:   查代码库中2-3个相似实现 — 目录结构、命名模式、共享 utilities
+explore:   查测试基础设施 — 框架、断言风格、mock 策略、覆盖率</code></pre>
+
+  <h4 style="font-family:var(--serif);font-size:.95rem;margin:var(--space-6) 0 var(--space-3)">带证据的提问</h4>
+  <div class="callout note">
+    Prometheus 不会空问。示例: "我找到你现有的 session pattern 在 <code>lib/session.ts</code>。是扩展现有模式，还是引入 NextAuth?"
+    <br><br>
+    每次有意义的交互后，更新 <code>.sisyphus/drafts/{name}.md</code>: 用户需求原文、技术决策 + 理由、调研发现、Scope 边界 (IN/OUT)。
+  </div>
+
+  <!-- Phase 2 -->
+  <div class="sec-title">
+    <span class="sec-num">3.3</span>
+    <h3>Phase 2 — Metis 计划分析 (自动)</h3>
+  </div>
+  <p>Metis 作为计划顾问，在生成计划前自动分析:</p>
+  <pre><code>输入: 需求 + 访谈记录 + 调研结果
+  ├─ 1. 应该问但没问的问题
+  ├─ 2. 需要设置的 guardrails
+  ├─ 3. 可能 scope creep 的区域 (如"也帮我写 adjacent module 的测试")
+  ├─ 4. 未验证的假设 (如假设 test infra 存在)
+  ├─ 5. 缺失的验收标准
+  └─ 6. 未覆盖的边界情况 (空状态/无效输入/高并发)</code></pre>
+  <div class="callout info">
+    <b>自动执行</b>: 无需用户确认，结果直接整合到计划。
+  </div>
+
+  <!-- Phase 3 -->
+  <div class="sec-title">
+    <span class="sec-num">3.4</span>
+    <h3>Phase 3 — Momus 计划审查 (可选高精度模式)</h3>
+  </div>
+
+  <h4 style="font-family:var(--serif);font-size:.95rem;margin-bottom:var(--space-3)">检查清单</h4>
+  <table>
+    <thead><tr><th>检查项</th><th>通过标准</th></tr></thead>
+    <tbody>
+      <tr><td>文件引用验证</td><td>100% 引用文件存在于代码库</td></tr>
+      <tr><td>关键文件验证</td><td>零失败</td></tr>
+      <tr><td>任务引用源</td><td>≥80% 任务有明确参考</td></tr>
+      <tr><td>验收标准</td><td>≥90% 任务有具体标准</td></tr>
+      <tr><td>业务逻辑假设</td><td>零假设 (或全部有证据支撑)</td></tr>
+      <tr><td>全局理解</td><td>计划逻辑清晰，工作流正确</td></tr>
+      <tr><td>关键红旗</td><td>零严重问题</td></tr>
+    </tbody>
+  </table>
+
+  <h4 style="font-family:var(--serif);font-size:.95rem;margin:var(--space-6) 0 var(--space-3)">循环协议</h4>
+  <pre><code>while Momus.verdict != "OKAY":
+    读取 Momus 反馈
+    修复 ALL 提出的问题 (不是修一部分)
+    重新生成 .sisyphus/plans/{name}.md
+    重新提交 Momus</code></pre>
+  <div class="callout warn">
+    <b>关键规则</b>: 没有妥协 — Momus 说不行就修到行为止。不能跳过 — 用户要求高精度，Momus 就是门控。不限制次数 — 直到 OKAY 为止。
+  </div>
+
+  <!-- Phase 4 -->
+  <div class="sec-title">
+    <span class="sec-num">3.5</span>
+    <h3>Phase 4 — Sisyphus 并行执行</h3>
+  </div>
+
+  <h4 style="font-family:var(--serif);font-size:.95rem;margin-bottom:var(--space-3)">设计原则</h4>
+  <div class="card">
+    <ul style="list-style:none;padding:0">
+      <li style="padding:var(--space-2) 0;color:var(--ink-mid);font-size:.88rem;padding-left:var(--space-4);position:relative"><span style="position:absolute;left:0;color:var(--teal)">→</span><b>最大化并行</b>: 每个 wave 5-8 个任务并发</li>
+      <li style="padding:var(--space-2) 0;color:var(--ink-mid);font-size:.88rem;padding-left:var(--space-4);position:relative"><span style="position:absolute;left:0;color:var(--teal)">→</span><b>依赖前置</b>: Wave 1 是共享依赖 (类型/config/接口)</li>
+      <li style="padding:var(--space-2) 0;color:var(--ink-mid);font-size:.88rem;padding-left:var(--space-4);position:relative"><span style="position:absolute;left:0;color:var(--teal)">→</span><b>单关注点</b>: 每个任务 = 1-3 文件，&gt;3 文件就拆分</li>
+      <li style="padding:var(--space-2) 0;color:var(--ink-mid);font-size:.88rem;padding-left:var(--space-4);position:relative"><span style="position:absolute;left:0;color:var(--teal)">→</span><b>粒度规则</b>: 任务少于 3 个 = 拆分不够</li>
+    </ul>
+  </div>
+
+  <h4 style="font-family:var(--serif);font-size:.95rem;margin:var(--space-6) 0 var(--space-3)">Wave 示例</h4>
+  <div class="wave-grid">
+    <div class="wave-card w1">
+      <h4>Wave 1 — 7 个并行 (无依赖)</h4>
+      <div class="task-list">
+        <span class="task-chip">T1: 脚手架</span>
+        <span class="task-chip">T2: 类型定义</span>
+        <span class="task-chip">T3: Schema</span>
+        <span class="task-chip">T4: 接口</span>
+        <span class="task-chip">T5: 基础设施</span>
+        <span class="task-chip">T6: 中间件</span>
+        <span class="task-chip">T7: 客户端</span>
+      </div>
+    </div>
+    <div class="wave-card w2">
+      <h4>Wave 2 — 7 个并行 (依赖 Wave 1)</h4>
+      <div class="task-list">
+        <span class="task-chip">T8: 核心逻辑 ←依赖 1,2,4</span>
+        <span class="task-chip">T9: API ←依赖 1,2,4</span>
+        <span class="task-chip">T10: 存储 ←依赖 2,4</span>
+        <span class="task-chip">T11: 重试/降级 ←依赖 2,4,8</span>
+        <span class="task-chip">T12: UI 框架</span>
+        <span class="task-chip">T13: 数据层</span>
+        <span class="task-chip">T14: Telemetry ←依赖 5,10</span>
+      </div>
+    </div>
+    <div class="wave-card w3">
+      <h4>Wave 3 — 6 个并行 (集成)</h4>
+      <div class="task-list">
+        <span class="task-chip">T15: 路由整合 ←依赖 6,11,14</span>
+        <span class="task-chip">T16: 可视化</span>
+        <span class="task-chip">T17-19: 部署配置 ←依赖 15</span>
+        <span class="task-chip">T20: 构建验证</span>
+      </div>
+    </div>
+    <div class="wave-card wf">
+      <h4>Wave Final — 4 agent 并行审稿</h4>
+      <div class="task-list">
+        <span class="task-chip">F1: Oracle — 计划符合度</span>
+        <span class="task-chip">F2: 代码质量 (tsc/lint/test)</span>
+        <span class="task-chip">F3: 真实 QA</span>
+        <span class="task-chip">F4: Scope 忠实性 (spec vs diff)</span>
+      </div>
+      <p style="font-size:.75rem;color:var(--brand);font-weight:600;margin-top:var(--space-3);margin-bottom:0">→ 4 个全部 APPROVE → 用户明确 "okay"</p>
+    </div>
+  </div>
+
+  <!-- ══ Horizontal CICD Flow Diagram ══ -->
+  <div class="sec-title">
+    <span class="sec-num">3.5</span>
+    <h3>Phase 5 — CICD 全链路部署</h3>
+  </div>
+
+  <h4 style="font-family:var(--serif);font-size:.95rem;margin-bottom:var(--space-3)">Pre-Commit Gate (MANDATORY)</h4>
+  <div class="card teal">
+    <ol style="padding-left:var(--space-6);color:var(--ink-mid);font-size:.88rem;line-height:1.9">
+      <li><code>git rev-parse --short=8 HEAD</code> → SHA 必须是 8 字符</li>
+      <li><code>echo -n "$SHA_8" | wc -c | grep -q "^8$"</code></li>
+      <li><code>kustomize build &lt;overlay-path&gt;</code> → exit 0 才可 commit</li>
+    </ol>
+  </div>
+
+  <h4 style="font-family:var(--serif);font-size:.95rem;margin:var(--space-6) 0 var(--space-3)">CICD 流程图</h4>
+
+  <div class="cicd-flow-two-row">
+    <!-- Origin: OpenCode + OMO -->
+    <div class="cicd-origin-box">
+      <div class="origin-icon">⚡</div>
+      <div class="origin-title">OpenCode + OMO</div>
+      <div class="origin-desc">commit → push → 触发 CI</div>
+    </div>
+    <div class="cicd-top-connector">
+      <div class="vert-line"></div>
+      <div class="vert-tip">▼</div>
+    </div>
+    <div class="cicd-row top-row">
+      <div class="cicd-step"><div class="step-card"><div class="icon">🔀</div><div class="step-name">Git Push</div><div class="step-desc">触发 Pipeline</div></div></div>
+      <div class="cicd-arrow"><div class="horiz-line"></div><div class="horiz-tip"></div></div>
+      <div class="cicd-step"><div class="step-card"><div class="icon">🏗️</div><div class="step-name">Pipeline</div><div class="step-desc">build + test + docker</div></div></div>
+      <div class="cicd-arrow"><div class="horiz-line"></div><div class="horiz-tip"></div></div>
+      <div class="cicd-step"><div class="step-card"><div class="icon">📦</div><div class="step-name">xxx-registry</div><div class="step-desc">Harbor proxy</div></div></div>
+      <div class="cicd-arrow"><div class="horiz-line"></div><div class="horiz-tip"></div></div>
+      <div class="cicd-step"><div class="step-card"><div class="icon">📋</div><div class="step-name">GitOps MR</div><div class="step-desc">自动创建 PR</div></div></div>
+    </div>
+    <div class="cicd-down-connector">
+      <div class="vert-line"></div>
+      <div class="vert-tip">▼</div>
+    </div>
+    <div class="cicd-row bottom-row">
+      <div class="cicd-step"><div class="step-card"><div class="icon">✅</div><div class="step-name">MR 合并</div><div class="step-desc">ops-dev 自动合并</div></div></div>
+      <div class="cicd-arrow"><div class="horiz-line"></div><div class="horiz-tip"></div></div>
+      <div class="cicd-step"><div class="step-card"><div class="icon">🔄</div><div class="step-name">ArgoCD</div><div class="step-desc">sync from CodeCommit</div></div></div>
+      <div class="cicd-arrow"><div class="horiz-line"></div><div class="horiz-tip"></div></div>
+      <div class="cicd-step"><div class="step-card"><div class="icon">☸️</div><div class="step-name">K8s 验证</div><div class="step-desc">rollout + pods + logs</div></div></div>
+    </div>
+  </div>
+
+  <!-- K8s verification details from source -->
+  <h4 style="font-family:var(--serif);font-size:.95rem;margin:var(--space-6) 0 var(--space-3)">K8s 验证详情</h4>
+  <div class="card">
+    <ul style="list-style:none;padding:0">
+      <li style="padding:var(--space-2) 0;color:var(--ink-mid);font-size:.85rem;padding-left:var(--space-4);position:relative"><span style="position:absolute;left:0;color:var(--teal)">→</span><code>kubectl rollout status</code> (timeout 600s)</li>
+      <li style="padding:var(--space-2) 0;color:var(--ink-mid);font-size:.85rem;padding-left:var(--space-4);position:relative"><span style="position:absolute;left:0;color:var(--teal)">→</span><code>kubectl get pods</code> — Running, Ready, 0 restarts, &gt;10min</li>
+      <li style="padding:var(--space-2) 0;color:var(--ink-mid);font-size:.85rem;padding-left:var(--space-4);position:relative"><span style="position:absolute;left:0;color:var(--teal)">→</span><code>kubectl logs</code> (grep ERROR/EXCEPTION/FATAL)</li>
+    </ul>
+    <h4 style="font-family:var(--serif);font-size:.95rem;margin:var(--space-4) 0 var(--space-3)">已知错误模式</h4>
+    <div style="display:flex;flex-wrap:wrap;gap:var(--space-2)">
+      <span class="task-chip">Connection refused…kafka → bootstrap server 错</span>
+      <span class="task-chip">SSLHandshakeException → 证书问题</span>
+      <span class="task-chip">VaultException → Vault auth</span>
+      <span class="task-chip">OOM killed → JVM heap</span>
+      <span class="task-chip">BindException → 端口冲突</span>
+    </div>
+    <p style="margin-top:var(--space-4);margin-bottom:0;font-size:.85rem;color:var(--ink-mid)">最后执行: <code>lark-progress-notify</code> 飞书通知</p>
+  </div>
+</article>
+
+<!-- ═══════════════════════════════════════════════
+     CHAPTER 4 — CICD Skills (unchanged content)
+     ═══════════════════════════════════════════════ -->
+<article class="chapter" id="c4">
+  <div class="ch-head">
+    <span class="ch-num">Chapter 04</span>
+    <span class="ch-title">自研 9 个 CICD Skills</span>
+  </div>
+
+  <div class="question-bubble">
+    <p>"代码写好了，怎么推上去部署？CI/CD 能一键自动完成吗？"</p>
+  </div>
+
+  <div class="sec-title">
+    <span class="sec-num">4.1</span>
+    <h3>核心 CICD Skills</h3>
+  </div>
+
+  <div class="skills-grid">
+    <div class="skill-card">
+      <div class="skill-name">cicd-fullchain</div>
+      <div class="skill-use">全链路部署</div>
+      <div class="skill-desc">commit→pipeline→ECR→GitOps MR→ArgoCD→K8s; 支持所有 xxx-service 服务，china.dev/china.test/cn.prod; 8-char SHA pre-commit gate; 两种模式: 开发 (dev push) 和 发布 (release)</div>
+    </div>
+    <div class="skill-card">
+      <div class="skill-name">xxx-test-report</div>
+      <div class="skill-use">GitLab 测试报告</div>
+      <div class="skill-desc">生成 xxx-service 三服务 (converter/manager/exchange-api) pipeline 测试 CSV 报告，导入飞书多维表格</div>
+    </div>
+    <div class="skill-card">
+      <div class="skill-name">xxx-new-service-design</div>
+      <div class="skill-use">新服务设计</div>
+      <div class="skill-desc">Connected Safety 新服务创建完整指南: K8s namespace、Go 路由、CI 模板、ArgoCD 注册、overlay 结构</div>
+    </div>
+    <div class="skill-card">
+      <div class="skill-name">cicd-poc-deploy</div>
+      <div class="skill-use">POC 部署</div>
+      <div class="skill-desc">概念验证服务的快速部署流程</div>
+    </div>
+    <div class="skill-card">
+      <div class="skill-name">cicd-quick-dev</div>
+      <div class="skill-use">快速开发</div>
+      <div class="skill-desc">开发分支快速部署，跳过部分 CI 阶段</div>
+    </div>
+    <div class="skill-card">
+      <div class="skill-name">xxx-vin-scanner</div>
+      <div class="skill-use">VIN 调度</div>
+      <div class="skill-desc">扫描 RMS Redis 活跃 VIN、查询 freshness、rotation、top-N 选择、/api/test/* endpoint 调用</div>
+    </div>
+    <div class="skill-card">
+      <div class="skill-name">artifactory-token</div>
+      <div class="skill-use">Artifactory 认证</div>
+      <div class="skill-desc">JFrog Artifactory Maven token 自动获取 + settings.xml 配置、SSO 登录</div>
+    </div>
+    <div class="skill-card">
+      <div class="skill-name">xxx-kube-login</div>
+      <div class="skill-use">K8s 集群登录</div>
+      <div class="skill-desc">xxx QA K8s SSO+2FA 自动登录、cookie 缓存避免重复 2FA、kube config 更新</div>
+    </div>
+    <div class="skill-card">
+      <div class="skill-name">lark-progress-notify</div>
+      <div class="skill-use">飞书通知</div>
+      <div class="skill-desc">部署里程碑自动飞书通知 (ACL-deployed/code-deployed/verified/custom)</div>
+    </div>
+  </div>
+
+  <div class="sec-title">
+    <span class="sec-num">4.2</span>
+    <h3>Ops-Dev Subagent (运维专属 Agent)</h3>
+  </div>
+  <p>
+    <code>ops-dev</code> 是 oh-my-openagent 中注册的专用 CICD 运维 subagent。
+  </p>
+
+  <div class="card teal">
+    <h4>职责</h4>
+    <ul style="list-style:none;padding:0;margin:0">
+      <li style="padding:var(--space-1) 0;color:var(--ink-mid);font-size:.85rem;padding-left:var(--space-4);position:relative"><span style="position:absolute;left:0;color:var(--teal)">→</span>ALL CICD: GitLab + GitHub + GitOps + ArgoCD + K8s</li>
+      <li style="padding:var(--space-1) 0;color:var(--ink-mid);font-size:.85rem;padding-left:var(--space-4);position:relative"><span style="position:absolute;left:0;color:var(--teal)">→</span>覆盖中国区所有微服务 (任何 china.dev / china.test / cn.prod 环境)</li>
+      <li style="padding:var(--space-1) 0;color:var(--ink-mid);font-size:.85rem;padding-left:var(--space-4);position:relative"><span style="position:absolute;left:0;color:var(--teal)">→</span>环境自治: token 过期刷新、kube 超时修复、proxy 自动处理</li>
+      <li style="padding:var(--space-1) 0;color:var(--ink-mid);font-size:.85rem;padding-left:var(--space-4);position:relative"><span style="position:absolute;left:0;color:var(--teal)">→</span>MR 自动合并: 定位 pipeline MR → 确认 → 合并</li>
+      <li style="padding:var(--space-1) 0;color:var(--ink-mid);font-size:.85rem;padding-left:var(--space-4);position:relative"><span style="position:absolute;left:0;color:var(--teal)">→</span>K8s 验证 + 日志 + 飞书通知</li>
+    </ul>
+  </div>
+
+  <h4 style="font-family:var(--serif);font-size:.95rem;margin:var(--space-6) 0 var(--space-3)">在 CICD 流程中的分工</h4>
+  <pre><code>cicd-fullchain skill: 理解工作流、准备前置步骤
+  ┌─ Step 0-3: 常规 agent (commit, push, pipeline 监控)
+  │
+  ▼
+ops-dev subagent: Step 4+ (所有部署操作)
+  ├─ 搜索 open MRs → 确认 → 合并
+  └─ ArgoCD sync 等待 → kubectl 验证 → 飞书通知</code></pre>
+
+  <div class="sec-title">
+    <span class="sec-num">4.2</span>
+    <h3>调研 &amp; 数据 Skills</h3>
+  </div>
+  <table>
+    <thead><tr><th>#</th><th>Skill</th><th>用途</th></tr></thead>
+    <tbody>
+      <tr><td>11</td><td><b>xxx-ds-query</b></td><td>Connected Safety 数据源查询 (4 文件: SKILL + 配置 + 参考)</td></tr>
+    </tbody>
+  </table>
+</article>
+
+<!-- ═══════════════════════════════════════════════
+     CHAPTER 5 — /ulw (unchanged content)
+     ═══════════════════════════════════════════════ -->
+<article class="chapter" id="c5">
+  <div class="ch-head">
+    <span class="ch-num">Chapter 05</span>
+    <span class="ch-title">/ulw 模式 — 持续工作到完成</span>
+  </div>
+
+  <div class="question-bubble">
+    <p>"写完 plan 后，有没有一种方法让它自动跑完所有步骤，不用每步都来确认？不达目标不罢休。"</p>
+  </div>
+
+  <div class="sec-title">
+    <span class="sec-num">5.1</span>
+    <h3>什么是 /ulw</h3>
+  </div>
+  <p>Ultrawork 模式 — 连续工作循环，不中断、不询问 (除非阻塞):</p>
+  <div class="callout info">
+    <code>/ulw</code> → 设定明确目标 → Agent 自主执行 → 完成自动继续 → 全部完成
+  </div>
+
+  <div class="sec-title">
+    <span class="sec-num">5.2</span>
+    <h3>统计数据</h3>
+  </div>
+  
+  <div class="card">
+    <h4 style="font-family:var(--serif);font-size:.9rem;margin-bottom:var(--space-3)">/ulw 执行</h4>
+    <p style="color:var(--ink-mid);font-size:.85rem;margin:0 0 var(--space-4)">共计 10 个成功案例，涵盖模拟器重构、协议迁移、路由修复、服务创建等场景。</p>
+    <h4 style="font-family:var(--serif);font-size:.9rem;margin:0 0 var(--space-3)">工作计划</h4>
+    <p style="color:var(--ink-mid);font-size:.85rem;margin:0">累计创建 20 个工作计划，覆盖从架构设计到部署验证的全生命周期。</p>
+  </div>
+</article>
+
+<!-- ═══════════════════════════════════════════════
+     CHAPTER 6 — Lessons (unchanged content)
+     ═══════════════════════════════════════════════ -->
+<article class="chapter" id="c6">
+  <div class="ch-head">
+    <span class="ch-num">Chapter 06</span>
+    <span class="ch-title">实战经验 &amp; 最佳实践</span>
+  </div>
+
+  <div class="question-bubble">
+    <p>"这套工作流在实际项目中踩了哪些坑？有什么可以避开的？"</p>
+  </div>
+
+  <div class="sec-title">
+    <span class="sec-num">6.1</span>
+    <h3>CI/CD 关键教训</h3>
+  </div>
+
+  <div class="lesson-row" style="border-radius:var(--radius-lg) var(--radius-lg) 0 0">
+    <span class="problem">问题</span>
+    <span class="root">根因</span>
+    <span class="fix">解决方案</span>
+  </div>
+  <div class="lesson-row">
+    <span class="problem">ImagePullBackOff</span>
+    <span class="root">SHA 只有 7 字符</span>
+    <span class="fix">Pre-commit gate, <code>git rev-parse --short=8</code></span>
+  </div>
+  <div class="lesson-row">
+    <span class="problem">pipeline CVE 扫描阻塞</span>
+    <span class="root">历史已有 CVE</span>
+    <span class="fix"><code>dp_upload_bom</code> 临时跳过 → 修复后恢复</span>
+  </div>
+  <div class="lesson-row">
+    <span class="problem">GitOps overlay 无效</span>
+    <span class="root">YAML 缩进错误</span>
+    <span class="fix"><code>kustomize build</code> pre-commit lint</span>
+  </div>
+  <div class="lesson-row">
+    <span class="problem">ArgoCD sync 失败</span>
+    <span class="root">7-char vs 8-char tag</span>
+    <span class="fix">Harbor webhook 只认 8-char</span>
+  </div>
+  <div class="lesson-row" style="border-bottom:1px solid var(--rule)">
+    <span class="problem">Kafka mTLS 连接失败</span>
+    <span class="root">SSL bundle 注册方式不匹配</span>
+    <span class="fix">尝试 7 种方式 → BeanPostProcessor</span>
+  </div>
+
+
+
+  <div class="sec-title">
+    <span class="sec-num">6.2</span>
+    <h3>团队协作模式</h3>
+  </div>
+  <div class="card">
+    <ul style="list-style:none;padding:0">
+      <li style="padding:var(--space-2) 0;color:var(--ink-mid);font-size:.88rem;padding-left:var(--space-4);position:relative"><span style="position:absolute;left:0;color:var(--brand)">→</span><b>Lark 通知</b> = 部署验收必要环节, 每个里程碑自动发送</li>
+      <li style="padding:var(--space-2) 0;color:var(--ink-mid);font-size:.88rem;padding-left:var(--space-4);position:relative"><span style="position:absolute;left:0;color:var(--brand)">→</span><b>Ops-Dev</b> 独立于编码 agent — 代码专注功能, ops 专注部署</li>
+      <li style="padding:var(--space-2) 0;color:var(--ink-mid);font-size:.88rem;padding-left:var(--space-4);position:relative"><span style="position:absolute;left:0;color:var(--brand)">→</span><b>飞书多维表格</b> = 测试报告仪表盘, skill 自动上报</li>
+      <li style="padding:var(--space-2) 0;color:var(--ink-mid);font-size:.88rem;padding-left:var(--space-4);position:relative"><span style="position:absolute;left:0;color:var(--brand)">→</span><b>Confluence 文档</b> 链接在 README, 每个服务标明</li>
+    </ul>
+  </div>
+</article>
+
+<!-- ═══════════════════════════════════════════════
+     CHAPTER 7 — Quick Reference
+     ═══════════════════════════════════════════════ -->
+<article class="chapter" id="c7">
+  <div class="ch-head">
+    <span class="ch-num">Chapter 07</span>
+    <span class="ch-title">命令速查</span>
+  </div>
+
+  <div class="question-bubble">
+    <p>"我刚开始用，日常开发有哪些常用命令？"</p>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:var(--space-4)">
+    <div class="card">
+      <h4>本地开发</h4>
+      <pre style="margin:var(--space-3) 0;box-shadow:none;padding:var(--space-3)"><code>cd xxx-service/&lt;service&gt;/
+mvn clean install
+mvn spring-boot:run \
+  -Dspring-boot.run.profiles=local</code></pre>
+    </div>
+    <div class="card">
+      <h4>CICD</h4>
+      <pre style="margin:var(--space-3) 0;box-shadow:none;padding:var(--space-3)"><code>git add -A && git commit \
+  -m "type(scope): desc" && git push
+kubectl get pods -n xxx-ns
+kubectl logs -n xxx-ns \
+  -l app=&lt;service&gt; --tail=100</code></pre>
+    </div>
+    <div class="card">
+      <h4>Pre-Commit Gate</h4>
+      <pre style="margin:var(--space-3) 0;box-shadow:none;padding:var(--space-3)"><code>SHA_8=$(git rev-parse --short=8 HEAD)
+echo -n "$SHA_8" | wc -c | grep -q "^8$"
+kustomize build apps/partner/&lt;service&gt;/\
+  overlays/china.dev</code></pre>
+    </div>
+    <div class="card">
+      <h4>Opencode</h4>
+      <pre style="margin:var(--space-3) 0;box-shadow:none;padding:var(--space-3)"><code>/start-work {plan-name}   # 执行计划
+/ulw                      # 持续工作模式
+/cancel                   # 取消</code></pre>
+    </div>
+    <div class="card">
+      <h4>Lark 通知</h4>
+      <pre style="margin:var(--space-3) 0;box-shadow:none;padding:var(--space-3)"><code>./scripts/notify-progress.sh china.dev code-deployed "&lt;Tag&gt; / &lt;Pod&gt;"</code></pre>
+    </div>
+  </div>
+</article>
+
+<!-- ═══════════════════════════════════════════════
+     CHAPTER 8 — Tech Stack
+     ═══════════════════════════════════════════════ -->
+<article class="chapter" id="c8">
+  <div class="ch-head">
+    <span class="ch-num">Chapter 08</span>
+    <span class="ch-title">技术栈清单</span>
+  </div>
+
+  <div class="tool-box">
+    <div class="tool-box-title">技术栈</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--space-5)">
+      <div style="text-align:center;padding:var(--space-5);background:var(--rule-light);border-radius:var(--radius-md)">
+        <div style="font-family:var(--mono);font-size:.72rem;font-weight:600;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase;margin-bottom:var(--space-2)">语言</div>
+        <div style="font-family:var(--serif);font-size:1.05rem;font-weight:600">Java 21/25</div>
+        <div style="font-size:.8rem;color:var(--ink-light);margin-top:var(--space-1)">Node.js 22</div>
+      </div>
+      <div style="text-align:center;padding:var(--space-5);background:var(--rule-light);border-radius:var(--radius-md)">
+        <div style="font-family:var(--mono);font-size:.72rem;font-weight:600;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase;margin-bottom:var(--space-2)">框架</div>
+        <div style="font-family:var(--serif);font-size:1.05rem;font-weight:600">Spring Boot</div>
+        <div style="font-size:.8rem;color:var(--ink-light);margin-top:var(--space-1)">Lombok</div>
+      </div>
+      <div style="text-align:center;padding:var(--space-5);background:var(--rule-light);border-radius:var(--radius-md)">
+        <div style="font-family:var(--mono);font-size:.72rem;font-weight:600;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase;margin-bottom:var(--space-2)">消息</div>
+        <div style="font-family:var(--serif);font-size:1.05rem;font-weight:600">Kafka</div>
+        <div style="font-size:.8rem;color:var(--ink-light);margin-top:var(--space-1)">Confluent Avro/Protobuf</div>
+      </div>
+      <div style="text-align:center;padding:var(--space-5);background:var(--rule-light);border-radius:var(--radius-md)">
+        <div style="font-family:var(--mono);font-size:.72rem;font-weight:600;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase;margin-bottom:var(--space-2)">存储</div>
+        <div style="font-family:var(--serif);font-size:1.05rem;font-weight:600">Redis</div>
+        <div style="font-size:.8rem;color:var(--ink-light);margin-top:var(--space-1)">Jedis (xxx-service)</div>
+      </div>
+      <div style="text-align:center;padding:var(--space-5);background:var(--rule-light);border-radius:var(--radius-md)">
+        <div style="font-family:var(--mono);font-size:.72rem;font-weight:600;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase;margin-bottom:var(--space-2)">容器</div>
+        <div style="font-family:var(--serif);font-size:1.05rem;font-weight:600">Docker · K8s</div>
+        <div style="font-size:.8rem;color:var(--ink-light);margin-top:var(--space-1)">ArgoCD · Istio</div>
+      </div>
+      <div style="text-align:center;padding:var(--space-5);background:var(--rule-light);border-radius:var(--radius-md)">
+        <div style="font-family:var(--mono);font-size:.72rem;font-weight:600;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase;margin-bottom:var(--space-2)">CI/CD</div>
+        <div style="font-family:var(--serif);font-size:1.05rem;font-weight:600">GitLab CI</div>
+        <div style="font-size:.8rem;color:var(--ink-light);margin-top:var(--space-1)">Harbor proxy</div>
+      </div>
+      <div style="text-align:center;padding:var(--space-5);background:var(--rule-light);border-radius:var(--radius-md)">
+        <div style="font-family:var(--mono);font-size:.72rem;font-weight:600;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase;margin-bottom:var(--space-2)">前端</div>
+        <div style="font-family:var(--serif);font-size:1.05rem;font-weight:600">React 17</div>
+        <div style="font-size:.8rem;color:var(--ink-light);margin-top:var(--space-1)">Mapbox · deck.gl</div>
+      </div>
+      <div style="text-align:center;padding:var(--space-5);background:var(--rule-light);border-radius:var(--radius-md)">
+        <div style="font-family:var(--mono);font-size:.72rem;font-weight:600;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase;margin-bottom:var(--space-2)">通知</div>
+        <div style="font-family:var(--serif);font-size:1.05rem;font-weight:600">Lark 飞书</div>
+      </div>
+    </div>
+  </div>
+</article>
+
+</main>
+
+<!-- ── Footer ──────────────────────────────────────── -->
+<footer class="footer">
+  *最后更新: 2026-06-03 / 数据来源: git log per-service, xxx-gitops merge log, ~/.agents/skills/, .sisyphus/plans/*
+</footer>
+
+</body>
+</html>
