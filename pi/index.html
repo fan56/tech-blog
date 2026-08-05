@@ -1,0 +1,2955 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light" />
+    <meta
+      name="description"
+      content="Pi · 我的终端 AI 编排者:极简内核与 85 个技能、20 个智能体、4 个 MCP 的叠加。"
+    />
+    <title>Pi · 我的终端 AI 编排者</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%2316181D'/%3E%3Ccircle cx='8' cy='8' r='3' fill='%230891B2'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        /* theme paper(纸白) - Light */
+        --bg: #f6f7f9;
+        --l1: #ffffff;
+        --l2: #eef1f5;
+        --tx: #16181d;
+        --tx2: #525c6e;
+        --tx3: #6b7686;
+        --ac: #0891b2;
+        --accent-strong: #0e7490;
+        --accent-soft: rgba(8, 145, 178, 0.1);
+        --line: rgba(22, 24, 29, 0.08);
+        --line2: rgba(22, 24, 29, 0.08);
+        --line-strong: rgba(22, 24, 29, 0.14);
+        --shadow1: 0 1px 2px rgba(22, 24, 29, 0.04);
+        --shadow2: 0 8px 24px rgba(22, 24, 29, 0.06);
+        --shadow1h: 0 1px 2px rgba(22, 24, 29, 0.08);
+        --shadow2h: 0 8px 24px rgba(22, 24, 29, 0.12);
+        --grid-line: rgba(22, 24, 29, 0.04);
+        --tip-bg: #ffffff;
+        --tip-tx: #16181d;
+        --ac-line: rgba(8, 145, 178, 0.3);
+        --ac-border: rgba(8, 145, 178, 0.25);
+        --ac-border-strong: rgba(8, 145, 178, 0.45);
+        --ac-border-main: rgba(8, 145, 178, 0.4);
+        --ac-card: rgba(8, 145, 178, 0.35);
+        --ac-glow: rgba(8, 145, 178, 0.07);
+        --ac-pulse: rgba(8, 145, 178, 0.13);
+        --ac-select: rgba(8, 145, 178, 0.22);
+        --sans:
+          -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC",
+          "Microsoft YaHei", system-ui, sans-serif;
+        --disp:
+          "Space Grotesk", -apple-system, "SF Pro Display", "PingFang SC",
+          system-ui, sans-serif;
+        --mono:
+          ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+        --ease: cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      /* theme warm(暖纸) - Light */
+      [data-theme="warm"] {
+        --bg: #f7f4ee;
+        --l1: #fffdf8;
+        --l2: #efeae0;
+        --tx: #2b2620;
+        --tx2: #6b6155;
+        --tx3: #8a7f70;
+        --ac: #b45309;
+        --accent-strong: #92400e;
+        --accent-soft: rgba(180, 83, 9, 0.1);
+        --line: rgba(22, 24, 29, 0.08);
+        --line2: rgba(22, 24, 29, 0.08);
+        --line-strong: rgba(22, 24, 29, 0.14);
+        --shadow1: 0 1px 2px rgba(22, 24, 29, 0.04);
+        --shadow2: 0 8px 24px rgba(22, 24, 29, 0.06);
+        --shadow1h: 0 1px 2px rgba(22, 24, 29, 0.08);
+        --shadow2h: 0 8px 24px rgba(22, 24, 29, 0.12);
+        --grid-line: rgba(22, 24, 29, 0.04);
+        --tip-bg: #fffdf8;
+        --tip-tx: #2b2620;
+        --ac-line: rgba(180, 83, 9, 0.3);
+        --ac-border: rgba(180, 83, 9, 0.25);
+        --ac-border-strong: rgba(180, 83, 9, 0.45);
+        --ac-border-main: rgba(180, 83, 9, 0.4);
+        --ac-card: rgba(180, 83, 9, 0.35);
+        --ac-glow: rgba(180, 83, 9, 0.07);
+        --ac-pulse: rgba(180, 83, 9, 0.13);
+        --ac-select: rgba(180, 83, 9, 0.22);
+      }
+      /* theme studio(冷蓝) - Light */
+      [data-theme="studio"] {
+        --bg: #f1f4f9;
+        --l1: #ffffff;
+        --l2: #e7ecf4;
+        --tx: #17202e;
+        --tx2: #4e5a6b;
+        --tx3: #6e7a8c;
+        --ac: #2563eb;
+        --accent-strong: #1d4ed8;
+        --accent-soft: rgba(37, 99, 235, 0.1);
+        --line: rgba(22, 24, 29, 0.08);
+        --line2: rgba(22, 24, 29, 0.08);
+        --line-strong: rgba(22, 24, 29, 0.14);
+        --shadow1: 0 1px 2px rgba(22, 24, 29, 0.04);
+        --shadow2: 0 8px 24px rgba(22, 24, 29, 0.06);
+        --shadow1h: 0 1px 2px rgba(22, 24, 29, 0.08);
+        --shadow2h: 0 8px 24px rgba(22, 24, 29, 0.12);
+        --grid-line: rgba(22, 24, 29, 0.04);
+        --tip-bg: #ffffff;
+        --tip-tx: #17202e;
+        --ac-line: rgba(37, 99, 235, 0.3);
+        --ac-border: rgba(37, 99, 235, 0.25);
+        --ac-border-strong: rgba(37, 99, 235, 0.45);
+        --ac-border-main: rgba(37, 99, 235, 0.4);
+        --ac-card: rgba(37, 99, 235, 0.35);
+        --ac-glow: rgba(37, 99, 235, 0.07);
+        --ac-pulse: rgba(37, 99, 235, 0.13);
+        --ac-select: rgba(37, 99, 235, 0.22);
+      }
+      /* theme oled(OLED 墨) - Dark */
+      [data-theme="oled"] {
+        --bg: #050505;
+        --l1: #0d0f14;
+        --l2: #11141b;
+        --tx: #f4f5f7;
+        --tx2: #9aa1ac;
+        --tx3: #6e7686;
+        --ac: #22d3ee;
+        --accent-strong: #67e8f9;
+        --accent-soft: rgba(34, 211, 238, 0.1);
+        --line: rgba(255, 255, 255, 0.1);
+        --line2: rgba(255, 255, 255, 0.08);
+        --line-strong: rgba(255, 255, 255, 0.16);
+        --shadow1: 0 1px 2px rgba(0, 0, 0, 0.35);
+        --shadow2: 0 8px 24px rgba(0, 0, 0, 0.45);
+        --shadow1h: 0 1px 2px rgba(0, 0, 0, 0.45);
+        --shadow2h: 0 8px 24px rgba(0, 0, 0, 0.55);
+        --grid-line: rgba(255, 255, 255, 0.05);
+        --tip-bg: #1f242d;
+        --tip-tx: #e6eaf0;
+        --ac-line: rgba(34, 211, 238, 0.3);
+        --ac-border: rgba(34, 211, 238, 0.25);
+        --ac-border-strong: rgba(34, 211, 238, 0.45);
+        --ac-border-main: rgba(34, 211, 238, 0.4);
+        --ac-card: rgba(34, 211, 238, 0.35);
+        --ac-glow: rgba(34, 211, 238, 0.1);
+        --ac-pulse: rgba(34, 211, 238, 0.16);
+        --ac-select: rgba(34, 211, 238, 0.25);
+      }
+      /* theme mist(雾夜) - Dark */
+      [data-theme="mist"] {
+        --bg: #0b0f14;
+        --l1: #12161d;
+        --l2: #171c24;
+        --tx: #e6eaf0;
+        --tx2: #98a2b0;
+        --tx3: #6b7686;
+        --ac: #60a5fa;
+        --accent-strong: #93c5fd;
+        --accent-soft: rgba(96, 165, 250, 0.1);
+        --line: rgba(255, 255, 255, 0.1);
+        --line2: rgba(255, 255, 255, 0.08);
+        --line-strong: rgba(255, 255, 255, 0.16);
+        --shadow1: 0 1px 2px rgba(0, 0, 0, 0.35);
+        --shadow2: 0 8px 24px rgba(0, 0, 0, 0.45);
+        --shadow1h: 0 1px 2px rgba(0, 0, 0, 0.45);
+        --shadow2h: 0 8px 24px rgba(0, 0, 0, 0.55);
+        --grid-line: rgba(255, 255, 255, 0.05);
+        --tip-bg: #1f242d;
+        --tip-tx: #e6eaf0;
+        --ac-line: rgba(96, 165, 250, 0.3);
+        --ac-border: rgba(96, 165, 250, 0.25);
+        --ac-border-strong: rgba(96, 165, 250, 0.45);
+        --ac-border-main: rgba(96, 165, 250, 0.4);
+        --ac-card: rgba(96, 165, 250, 0.35);
+        --ac-glow: rgba(96, 165, 250, 0.1);
+        --ac-pulse: rgba(96, 165, 250, 0.16);
+        --ac-select: rgba(96, 165, 250, 0.25);
+      }
+      /* theme ember(暖夜) - Dark */
+      [data-theme="ember"] {
+        --bg: #12100c;
+        --l1: #191610;
+        --l2: #1f1b14;
+        --tx: #f1ebe2;
+        --tx2: #a89c8a;
+        --tx3: #7e7466;
+        --ac: #f59e0b;
+        --accent-strong: #fbbf24;
+        --accent-soft: rgba(245, 158, 11, 0.1);
+        --line: rgba(255, 255, 255, 0.1);
+        --line2: rgba(255, 255, 255, 0.08);
+        --line-strong: rgba(255, 255, 255, 0.16);
+        --shadow1: 0 1px 2px rgba(0, 0, 0, 0.35);
+        --shadow2: 0 8px 24px rgba(0, 0, 0, 0.45);
+        --shadow1h: 0 1px 2px rgba(0, 0, 0, 0.45);
+        --shadow2h: 0 8px 24px rgba(0, 0, 0, 0.55);
+        --grid-line: rgba(255, 255, 255, 0.05);
+        --tip-bg: #1f242d;
+        --tip-tx: #e6eaf0;
+        --ac-line: rgba(245, 158, 11, 0.3);
+        --ac-border: rgba(245, 158, 11, 0.25);
+        --ac-border-strong: rgba(245, 158, 11, 0.45);
+        --ac-border-main: rgba(245, 158, 11, 0.4);
+        --ac-card: rgba(245, 158, 11, 0.35);
+        --ac-glow: rgba(245, 158, 11, 0.1);
+        --ac-pulse: rgba(245, 158, 11, 0.16);
+        --ac-select: rgba(245, 158, 11, 0.25);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        background: var(--bg);
+        color: var(--tx);
+        font-family: var(--sans);
+        font-size: 15.5px;
+        line-height: 1.7;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+      body::before {
+        /* 顶部极淡青色辉光 */
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background: radial-gradient(
+          58% 42% at 50% -12%,
+          var(--ac-glow),
+          transparent 72%
+        );
+      }
+      ::selection {
+        background: var(--ac-select);
+        color: var(--tx);
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      .m {
+        font-family: var(--mono);
+      }
+      .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 0 28px;
+      }
+      section {
+        padding: 104px 0 0;
+        scroll-margin-top: 80px;
+      }
+
+      /* ---------- nav ---------- */
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: var(--bg);
+        border-bottom: 1px solid var(--line);
+      }
+      .nav-in {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 64px;
+        gap: 16px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-family: var(--mono);
+        font-size: 14px;
+        letter-spacing: 0.04em;
+        color: var(--tx);
+        flex-shrink: 0;
+      }
+      .b-dot {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        border-radius: 2px;
+        background: var(--ac);
+        animation: blink 3.4s ease-in-out infinite alternate;
+      }
+      .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        min-width: 0;
+      }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .nav-link {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--tx2);
+        padding: 7px 14px;
+        border: 1px solid var(--line2);
+        border-radius: 8px;
+        white-space: nowrap;
+        transition:
+          color 0.3s var(--ease),
+          border-color 0.3s var(--ease);
+      }
+      .nav-link:hover {
+        color: var(--accent-strong);
+        border-color: var(--ac-border-strong);
+      }
+      .nav-link.active {
+        color: var(--accent-strong);
+        border-color: var(--ac);
+      }
+
+      /* ---------- theme selector ---------- */
+      .theme-sw {
+        position: relative;
+        flex-shrink: 0;
+      }
+      .theme-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        cursor: pointer;
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--tx2);
+        padding: 7px 12px;
+        border: 1px solid var(--line2);
+        border-radius: 8px;
+        background: var(--l1);
+        transition:
+          color 0.3s var(--ease),
+          border-color 0.3s var(--ease);
+      }
+      .theme-btn:hover {
+        color: var(--accent-strong);
+        border-color: var(--ac-border-strong);
+      }
+      .theme-btn:focus-visible,
+      .tp-opt:focus-visible {
+        outline: 2px solid var(--ac);
+        outline-offset: 2px;
+      }
+      .tdot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        border: 1px solid rgba(128, 128, 128, 0.35);
+        flex-shrink: 0;
+        display: inline-block;
+      }
+      .theme-btn .tdot {
+        width: 8px;
+        height: 8px;
+      }
+      .theme-btn .tdot.bg {
+        background: var(--bg);
+      }
+      .theme-btn .tdot.l1 {
+        background: var(--l1);
+      }
+      .theme-btn .tdot.ac {
+        background: var(--ac);
+      }
+      .theme-name {
+        min-width: 30px;
+        text-align: left;
+      }
+      .theme-chev {
+        opacity: 0.6;
+        transition: transform 0.3s var(--ease);
+      }
+      .theme-sw.open .theme-chev {
+        transform: rotate(180deg);
+      }
+      .theme-panel {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        z-index: 60;
+        min-width: 180px;
+        padding: 8px;
+        background: var(--l1);
+        border: 1px solid var(--line2);
+        border-radius: 12px;
+        box-shadow:
+          var(--shadow2),
+          0 0 0 1px var(--line);
+        opacity: 0;
+        transform: translateY(-5px);
+        pointer-events: none;
+        visibility: hidden;
+        transition:
+          opacity 0.18s var(--ease),
+          transform 0.18s var(--ease),
+          visibility 0s 0.18s;
+      }
+      .theme-panel.open {
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+        visibility: visible;
+        transition:
+          opacity 0.18s var(--ease),
+          transform 0.18s var(--ease);
+      }
+      .tp-group {
+        padding: 4px 0;
+      }
+      .tp-group + .tp-group {
+        border-top: 1px solid var(--line2);
+        margin-top: 4px;
+        padding-top: 8px;
+      }
+      .tp-label {
+        display: block;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--tx3);
+        padding: 2px 8px 5px;
+      }
+      .tp-opt {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        width: 100%;
+        cursor: pointer;
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--tx2);
+        padding: 7px 9px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        background: none;
+        text-align: left;
+        transition:
+          color 0.3s var(--ease),
+          background 0.3s var(--ease),
+          border-color 0.3s var(--ease);
+      }
+      .tp-opt:hover {
+        color: var(--tx);
+        background: var(--l2);
+      }
+      .tp-opt.active {
+        color: var(--tx);
+        border-color: var(--ac);
+        background: var(--accent-soft);
+      }
+      .tp-opt .tdot {
+        width: 9px;
+        height: 9px;
+      }
+      .tp-opt .tdot.bg {
+        background: var(--sw-bg);
+      }
+      .tp-opt .tdot.l1 {
+        background: var(--sw-l1);
+      }
+      .tp-opt .tdot.ac {
+        background: var(--sw-ac);
+      }
+      .tp-opt[data-theme-val="paper"] {
+        --sw-bg: #f6f7f9;
+        --sw-l1: #ffffff;
+        --sw-ac: #0891b2;
+      }
+      .tp-opt[data-theme-val="warm"] {
+        --sw-bg: #f7f4ee;
+        --sw-l1: #fffdf8;
+        --sw-ac: #b45309;
+      }
+      .tp-opt[data-theme-val="studio"] {
+        --sw-bg: #f1f4f9;
+        --sw-l1: #ffffff;
+        --sw-ac: #2563eb;
+      }
+      .tp-opt[data-theme-val="oled"] {
+        --sw-bg: #050505;
+        --sw-l1: #0d0f14;
+        --sw-ac: #22d3ee;
+      }
+      .tp-opt[data-theme-val="mist"] {
+        --sw-bg: #0b0f14;
+        --sw-l1: #12161d;
+        --sw-ac: #60a5fa;
+      }
+      .tp-opt[data-theme-val="ember"] {
+        --sw-bg: #12100c;
+        --sw-l1: #191610;
+        --sw-ac: #f59e0b;
+      }
+
+      /* ---------- hero ---------- */
+      .hero {
+        padding: 112px 0 36px;
+        position: relative;
+      }
+      .hero-in {
+        max-width: 760px;
+      }
+      .hero h1 {
+        font-family: var(--disp);
+        font-weight: 600;
+        letter-spacing: -0.025em;
+        line-height: 1.06;
+        font-size: clamp(3rem, 5vw, 5.5rem);
+      }
+      .hd-dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 3px;
+        background: var(--ac);
+        margin-right: 14px;
+        transform: translateY(-6px);
+        animation: blink 3.4s ease-in-out infinite alternate;
+      }
+      .hero-sub {
+        margin-top: 26px;
+        max-width: 60ch;
+        font-size: 16px;
+        color: var(--tx2);
+        line-height: 1.75;
+      }
+      .hero-sub b {
+        color: var(--tx);
+        font-weight: 600;
+      }
+      .cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 34px;
+        padding: 13px 22px;
+        border: 1px solid var(--line-strong);
+        border-radius: 16px;
+        background: var(--l1);
+        color: var(--tx);
+        font-size: 14.5px;
+        position: relative;
+        transition: transform 0.7s var(--ease);
+      }
+      .cta::after {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        border: 1px solid var(--ac-border-strong);
+        border-radius: 16px;
+        opacity: 0;
+        transition: opacity 0.7s var(--ease);
+        pointer-events: none;
+      }
+      .cta:hover {
+        transform: translateY(-2px);
+        color: var(--accent-strong);
+      }
+      .cta:hover::after {
+        opacity: 1;
+      }
+      .cta svg {
+        opacity: 0.75;
+      }
+      .hero-grid {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background-image:
+          linear-gradient(var(--grid-line) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+        background-size: 54px 54px;
+        -webkit-mask-image: radial-gradient(
+          70% 62% at 50% 6%,
+          var(--tx) 30%,
+          transparent 78%
+        );
+        mask-image: radial-gradient(
+          70% 62% at 50% 6%,
+          var(--tx) 30%,
+          transparent 78%
+        );
+      }
+
+      /* ---------- section head ---------- */
+      .sec-head {
+        max-width: 660px;
+        margin-bottom: 52px;
+      }
+      .sec-mono {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--tx3);
+      }
+      .sec-bar {
+        width: 34px;
+        height: 2px;
+        background: var(--ac);
+        opacity: 0.8;
+        margin: 16px 0 20px;
+      }
+      .sec-head h2 {
+        font-family: var(--disp);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        line-height: 1.12;
+        font-size: clamp(1.9rem, 3.2vw, 2.6rem);
+        color: var(--tx);
+      }
+      .sec-head .lead {
+        margin-top: 16px;
+        color: var(--tx2);
+        font-size: 15.5px;
+        max-width: 65ch;
+      }
+      .sec-head .lead b {
+        color: var(--tx);
+        font-weight: 600;
+      }
+
+      /* ---------- cards (Double-Bezel) ---------- */
+      .card {
+        background: var(--l1);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 6px;
+        height: 100%;
+        box-shadow: var(--shadow1), var(--shadow2);
+      }
+      .card:hover {
+        box-shadow: var(--shadow1h), var(--shadow2h);
+      }
+      .card .inner {
+        background: var(--l2);
+        border-radius: 11px;
+        padding: 26px;
+        height: 100%;
+      }
+      .card.accent {
+        border-color: var(--ac-card);
+      }
+      .card.accent .inner::before {
+        content: "";
+        display: block;
+        width: 38px;
+        height: 2px;
+        background: var(--ac);
+        opacity: 0.85;
+        margin-bottom: 20px;
+        border-radius: 1px;
+      }
+
+      /* ---------- reveal ---------- */
+      .reveal {
+        opacity: 0;
+        transform: translateY(26px);
+        transition:
+          opacity 0.7s var(--ease),
+          transform 0.7s var(--ease);
+      }
+      .reveal.in {
+        opacity: 1;
+        transform: none;
+      }
+
+      /* ---------- architecture ---------- */
+      .arch-stage {
+        position: relative;
+      }
+      .arch-svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+      }
+      .arch-line {
+        stroke: var(--ac);
+      }
+      .arch-dot {
+        fill: var(--ac);
+      }
+      .arch-dot-halo {
+        fill: none;
+        stroke: var(--ac-pulse);
+        stroke-width: 1.5;
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: arch-pulse 3s ease-out infinite;
+      }
+      .band {
+        position: relative;
+        z-index: 2;
+      }
+      .band + .band {
+        margin-top: 96px;
+      }
+      .band-head {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        margin-bottom: 24px;
+      }
+      .band-head .b-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+        animation: none;
+        opacity: 0.9;
+      }
+      .b-cn {
+        font-family: var(--mono);
+        font-size: 13.5px;
+        letter-spacing: 0.02em;
+        color: var(--tx);
+        font-weight: 500;
+      }
+      .b-mono {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--tx3);
+      }
+      .band-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      .band-grid.d {
+        grid-template-columns: 1.7fr 1fr;
+      }
+      .gcard {
+        background: var(--l1);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 6px;
+        box-shadow: var(--shadow1), var(--shadow2);
+      }
+      .gcard:hover {
+        box-shadow: var(--shadow1h), var(--shadow2h);
+      }
+      .gcard-in {
+        background: var(--l2);
+        border-radius: 11px;
+        padding: 22px;
+      }
+      .ghead {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+      .g-title {
+        font-family: var(--mono);
+        font-size: 13.5px;
+        color: var(--tx);
+        font-weight: 500;
+      }
+      .g-count {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        color: var(--accent-strong);
+      }
+      .g-sub {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--tx3);
+      }
+
+      /* nodes */
+      .node {
+        position: relative;
+        border: 1px solid var(--line2);
+        background: var(--l1);
+        border-radius: 10px;
+        padding: 13px 15px;
+        cursor: default;
+        outline: none;
+        box-shadow: var(--shadow1);
+        transition:
+          transform 0.7s var(--ease),
+          opacity 0.7s var(--ease);
+      }
+      .node:hover {
+        transform: scale(1.05);
+        z-index: 3;
+      }
+      .node .hint {
+        position: absolute;
+        inset: -1px;
+        border: 1px solid var(--ac-border-strong);
+        border-radius: 10px;
+        opacity: 0;
+        transition: opacity 0.7s var(--ease);
+        pointer-events: none;
+      }
+      .node:hover .hint,
+      .node:focus-visible .hint,
+      .node.tip-open .hint {
+        opacity: 1;
+      }
+      .node .nm {
+        display: block;
+        font-family: var(--mono);
+        font-size: 13px;
+        color: var(--tx);
+        line-height: 1.45;
+      }
+      .node .nm .x {
+        color: var(--accent-strong);
+      }
+      .node .ds {
+        display: block;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--tx3);
+        margin-top: 4px;
+        line-height: 1.6;
+      }
+      .node.main {
+        width: min(430px, 100%);
+        border-color: var(--ac-border-main);
+        background: var(--accent-soft);
+        text-align: center;
+        box-shadow: var(--shadow2);
+      }
+      .node.main .nm {
+        font-size: 16px;
+      }
+      .node.main .ds {
+        color: var(--tx2);
+        margin-top: 6px;
+      }
+      .pulse {
+        position: absolute;
+        inset: -16px;
+        border-radius: 22px;
+        z-index: -1;
+        pointer-events: none;
+        background: radial-gradient(
+          58% 58% at 50% 50%,
+          var(--ac-pulse),
+          transparent 70%
+        );
+        animation: breathe 3.2s ease-in-out infinite alternate;
+      }
+      .tag {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 10.5px;
+        color: var(--accent-strong);
+        background: var(--accent-soft);
+        border: 1px solid var(--ac-border);
+        border-radius: 6px;
+        padding: 2px 7px;
+        margin-left: 8px;
+        vertical-align: 2px;
+      }
+
+      /* band A */
+      .band-a {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .subs {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        width: 100%;
+        margin-top: 18px;
+      }
+
+      /* chips */
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .chip {
+        position: relative;
+        font-family: var(--mono);
+        font-size: 11.5px;
+        color: var(--tx2);
+        border: 1px solid var(--line2);
+        background: var(--l1);
+        border-radius: 8px;
+        padding: 7px 11px;
+        cursor: default;
+        outline: none;
+        box-shadow: var(--shadow1);
+        transition:
+          transform 0.7s var(--ease),
+          opacity 0.7s var(--ease);
+      }
+      .chip::after {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        border: 1px solid var(--ac-border-strong);
+        border-radius: 8px;
+        opacity: 0;
+        transition: opacity 0.7s var(--ease);
+        pointer-events: none;
+      }
+      .chip:hover {
+        transform: scale(1.05);
+        z-index: 3;
+      }
+      .chip:hover::after,
+      .chip:focus-visible::after,
+      .chip.tip-open::after {
+        opacity: 1;
+      }
+      .chip.dim {
+        color: var(--tx3);
+      }
+      .chip b {
+        color: var(--accent-strong);
+        font-weight: 500;
+      }
+
+      /* vcards (node grids) */
+      .vcards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .vcards .node .ds {
+        margin-top: 5px;
+      }
+      .vcards .span2 {
+        grid-column: 1 / -1;
+      }
+      .vstack {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      /* 卡内分组分隔 */
+      .gcard-in .chips + .vcards,
+      .gcard-in .vcards + .sblock,
+      .gcard-in .chips + .sblock,
+      .gcard-in .sblock + .sblock {
+        margin-top: 18px;
+        padding-top: 18px;
+        border-top: 1px solid var(--line2);
+      }
+      .sblock .ghead {
+        margin-bottom: 12px;
+      }
+
+      /* ---------- compare ---------- */
+      .cmp-grid {
+        display: grid;
+        grid-template-columns: 5fr 7fr;
+        gap: 16px;
+        align-items: stretch;
+      }
+      .cmp-title {
+        font-family: var(--disp);
+        font-size: 19px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: var(--tx);
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        margin-bottom: 6px;
+      }
+      .cmp-sub {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--tx3);
+        letter-spacing: 0.06em;
+      }
+      .rows {
+        list-style: none;
+        margin-top: 16px;
+      }
+      .rows li {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 18px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--line2);
+      }
+      .rows li:last-child {
+        border-bottom: 0;
+      }
+      .rows span {
+        font-size: 14px;
+        color: var(--tx2);
+      }
+      .rows b {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--tx);
+        font-weight: 500;
+        text-align: right;
+      }
+      .accent .rows b {
+        color: var(--accent-strong);
+      }
+
+      /* ---------- bento ---------- */
+      .bento {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        grid-auto-flow: dense;
+        gap: 16px;
+      }
+      .bento .sp7 {
+        grid-column: span 7;
+      }
+      .bento .sp5 {
+        grid-column: span 5;
+      }
+      .bento .sp12 {
+        grid-column: span 12;
+      }
+      .c-head {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .c-head h3 {
+        font-family: var(--disp);
+        font-size: 17px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: var(--tx);
+      }
+      .c-head .cnt {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--accent-strong);
+        margin-left: auto;
+      }
+      .c-lead {
+        font-size: 13.5px;
+        color: var(--tx2);
+        margin-bottom: 16px;
+        max-width: 52ch;
+      }
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+      }
+      .tags .chip {
+        cursor: default;
+      }
+      .card.tall .inner {
+        padding-top: 32px;
+        padding-bottom: 32px;
+      }
+
+      /* ---------- agents ---------- */
+      .agent-grid {
+        display: grid;
+        grid-template-columns: 7fr 5fr;
+        gap: 16px;
+      }
+      .agent-grid .wide {
+        grid-column: 1 / -1;
+      }
+      .role {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        font-size: 14px;
+        color: var(--tx2);
+        padding: 11px 0;
+        border-bottom: 1px solid var(--line2);
+      }
+      .role:last-child {
+        border-bottom: 0;
+      }
+      .role .k {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--tx);
+      }
+      .role .v {
+        margin-left: auto;
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--tx3);
+        text-align: right;
+      }
+      .flow {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        margin-top: 22px;
+        flex-wrap: wrap;
+      }
+      .flow .step {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--mono);
+        font-size: 13px;
+        color: var(--tx);
+      }
+      .flow .step i {
+        width: 7px;
+        height: 7px;
+        border-radius: 2px;
+        background: var(--ac);
+        display: inline-block;
+        opacity: 0.85;
+      }
+      .flow .link {
+        width: 30px;
+        height: 1px;
+        background: var(--ac-line);
+        margin: 0 12px;
+      }
+      .rules {
+        list-style: none;
+        counter-reset: r;
+        margin-top: 14px;
+      }
+      .rules li {
+        display: flex;
+        gap: 14px;
+        align-items: baseline;
+        padding: 9px 0;
+        border-bottom: 1px solid var(--line2);
+        font-size: 14px;
+        color: var(--tx2);
+      }
+      .rules li:last-child {
+        border-bottom: 0;
+      }
+      .rules li::before {
+        counter-increment: r;
+        content: counter(r, decimal-leading-zero);
+        font-family: var(--mono);
+        font-size: 11.5px;
+        color: var(--accent-strong);
+        opacity: 0.75;
+        min-width: 20px;
+      }
+      .rules b {
+        color: var(--tx);
+        font-weight: 600;
+      }
+      .rule-note {
+        margin-top: 10px;
+        font-size: 13px;
+        color: var(--tx3);
+      }
+
+      /* ---------- config ---------- */
+      .cfg-grid {
+        display: grid;
+        grid-template-columns: 5fr 7fr;
+        gap: 16px;
+        align-items: stretch;
+      }
+      .cfg-item {
+        padding: 15px 0;
+        border-bottom: 1px solid var(--line2);
+      }
+      .cfg-item:first-child {
+        padding-top: 2px;
+      }
+      .cfg-item:last-child {
+        border-bottom: 0;
+        padding-bottom: 2px;
+      }
+      .cfg-k {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--tx3);
+        display: block;
+        margin-bottom: 7px;
+      }
+      .cfg-v {
+        font-family: var(--mono);
+        font-size: 13px;
+        color: var(--tx);
+        line-height: 1.7;
+      }
+      .cfg-v .dim {
+        color: var(--tx3);
+      }
+      .cfg-v b {
+        color: var(--accent-strong);
+        font-weight: 500;
+      }
+
+      /* ---------- footer ---------- */
+      footer {
+        padding: 110px 0 56px;
+      }
+      .foot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        border-top: 1px solid var(--line2);
+        padding-top: 26px;
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--tx3);
+      }
+      .foot b {
+        color: var(--tx2);
+        font-weight: 500;
+      }
+
+      /* ---------- tooltip ---------- */
+      #tooltip {
+        position: fixed;
+        z-index: 60;
+        pointer-events: none;
+        opacity: 0;
+        background: var(--tip-bg);
+        border: 1px solid var(--line-strong);
+        border-radius: 8px;
+        box-shadow: var(--shadow2);
+        padding: 8px 12px;
+        font-size: 12.5px;
+        color: var(--tip-tx);
+        line-height: 1.55;
+        max-width: 280px;
+        transform: translate(-50%, -100%);
+        transition:
+          opacity 0.18s ease,
+          transform 0.18s ease;
+      }
+      #tooltip.on {
+        opacity: 1;
+      }
+      #tooltip .tick {
+        display: block;
+        width: 14px;
+        height: 2px;
+        background: var(--ac);
+        margin-bottom: 6px;
+        border-radius: 1px;
+      }
+
+      /* ---------- responsive ---------- */
+      @media (max-width: 1023px) {
+        .band-a .subs {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .band-grid.d {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 767px) {
+        .wrap {
+          padding: 0 16px;
+        }
+        section {
+          padding: 76px 0 0;
+        }
+        .hero {
+          padding: 84px 0 28px;
+        }
+        .hero h1 {
+          font-size: clamp(2.35rem, 9.5vw, 3.1rem);
+        }
+        .hero-sub {
+          font-size: 15px;
+        }
+        .cta {
+          width: 100%;
+          justify-content: center;
+        }
+        .arch-svg {
+          display: none;
+        }
+        .band + .band {
+          margin-top: 56px;
+        }
+        .band + .band::before {
+          content: "";
+          position: absolute;
+          top: -56px;
+          left: 50%;
+          width: 1px;
+          height: 44px;
+          background: var(--ac-line);
+        }
+        .band-grid {
+          grid-template-columns: 1fr;
+        }
+        .subs {
+          grid-template-columns: 1fr;
+        }
+        .cmp-grid,
+        .agent-grid,
+        .cfg-grid {
+          grid-template-columns: 1fr;
+        }
+        .bento .sp7,
+        .bento .sp5,
+        .bento .sp12 {
+          grid-column: span 12;
+        }
+        .vcards {
+          grid-template-columns: 1fr;
+        }
+        .vcards .span2 {
+          grid-column: auto;
+        }
+        .chips {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 14px;
+        }
+        .chip {
+          width: 100%;
+          text-align: left;
+        }
+        .subs,
+        .vcards,
+        .vstack {
+          gap: 14px;
+        }
+        .chip + .chip,
+        .vcards .node + .node,
+        .subs .node + .node,
+        .vstack .node + .node {
+          position: relative;
+        }
+        .chip + .chip::before,
+        .vcards .node + .node::before,
+        .subs .node + .node::before,
+        .vstack .node + .node::before {
+          content: "";
+          position: absolute;
+          top: -14px;
+          left: 18px;
+          width: 1px;
+          height: 14px;
+          background: var(--ac-line);
+        }
+        .nav-links {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+        }
+        .nav-links::-webkit-scrollbar {
+          display: none;
+        }
+        .nav-right {
+          flex: 1;
+          min-width: 0;
+          gap: 10px;
+        }
+        .nav-links {
+          flex: 1;
+          min-width: 0;
+          gap: 6px;
+        }
+        .nav-link {
+          font-size: 11.5px;
+          padding: 6px 10px;
+        }
+        .flow .link {
+          width: 18px;
+          margin: 0 8px;
+        }
+        footer {
+          padding: 80px 0 40px;
+        }
+      }
+
+      @keyframes blink {
+        from {
+          opacity: 0.35;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes breathe {
+        from {
+          opacity: 0.28;
+        }
+        to {
+          opacity: 0.85;
+        }
+      }
+      @keyframes arch-pulse {
+        from {
+          transform: scale(0.55);
+          opacity: 0.9;
+        }
+        to {
+          transform: scale(1.4);
+          opacity: 0;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.001s !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.001s !important;
+        }
+        .reveal {
+          opacity: 1 !important;
+          transform: none !important;
+        }
+        .pulse {
+          display: none;
+        }
+        .arch-dot-halo {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body id="top">
+    <nav class="nav">
+      <div class="wrap nav-in">
+        <a class="brand" href="#top"><span class="b-dot"></span>pi</a>
+        <div class="nav-right">
+          <div class="nav-links">
+            <a class="nav-link" href="#architecture">架构图</a>
+            <a class="nav-link" href="#compare">对比</a>
+            <a class="nav-link" href="#capabilities">能力</a>
+            <a class="nav-link" href="#agents">团队</a>
+            <a class="nav-link" href="#config">配置</a>
+          </div>
+          <div class="theme-sw" id="themeSw">
+            <button
+              class="theme-btn"
+              id="themeBtn"
+              type="button"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-label="切换主题"
+            >
+              <span class="tdot bg" aria-hidden="true"></span
+              ><span class="tdot l1" aria-hidden="true"></span
+              ><span class="tdot ac" aria-hidden="true"></span>
+              <span class="theme-name" id="themeName">暖纸</span>
+              <svg
+                class="theme-chev"
+                width="10"
+                height="10"
+                viewBox="0 0 16 16"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M4 6l4 4 4-4"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
+            <div
+              class="theme-panel"
+              id="themePanel"
+              role="menu"
+              aria-label="主题选择"
+            >
+              <div class="tp-group" role="group" aria-label="Light 主题">
+                <span class="tp-label">Light</span>
+                <button
+                  class="tp-opt"
+                  type="button"
+                  role="menuitemradio"
+                  data-theme-val="paper"
+                  aria-checked="false"
+                >
+                  <span class="tdot bg" aria-hidden="true"></span
+                  ><span class="tdot l1" aria-hidden="true"></span
+                  ><span class="tdot ac" aria-hidden="true"></span>纸白
+                </button>
+                <button
+                  class="tp-opt"
+                  type="button"
+                  role="menuitemradio"
+                  data-theme-val="warm"
+                  aria-checked="false"
+                >
+                  <span class="tdot bg" aria-hidden="true"></span
+                  ><span class="tdot l1" aria-hidden="true"></span
+                  ><span class="tdot ac" aria-hidden="true"></span>暖纸
+                </button>
+                <button
+                  class="tp-opt"
+                  type="button"
+                  role="menuitemradio"
+                  data-theme-val="studio"
+                  aria-checked="false"
+                >
+                  <span class="tdot bg" aria-hidden="true"></span
+                  ><span class="tdot l1" aria-hidden="true"></span
+                  ><span class="tdot ac" aria-hidden="true"></span>冷蓝
+                </button>
+              </div>
+              <div class="tp-group" role="group" aria-label="Dark 主题">
+                <span class="tp-label">Dark</span>
+                <button
+                  class="tp-opt"
+                  type="button"
+                  role="menuitemradio"
+                  data-theme-val="oled"
+                  aria-checked="false"
+                >
+                  <span class="tdot bg" aria-hidden="true"></span
+                  ><span class="tdot l1" aria-hidden="true"></span
+                  ><span class="tdot ac" aria-hidden="true"></span>OLED 墨
+                </button>
+                <button
+                  class="tp-opt"
+                  type="button"
+                  role="menuitemradio"
+                  data-theme-val="mist"
+                  aria-checked="false"
+                >
+                  <span class="tdot bg" aria-hidden="true"></span
+                  ><span class="tdot l1" aria-hidden="true"></span
+                  ><span class="tdot ac" aria-hidden="true"></span>雾夜
+                </button>
+                <button
+                  class="tp-opt"
+                  type="button"
+                  role="menuitemradio"
+                  data-theme-val="ember"
+                  aria-checked="false"
+                >
+                  <span class="tdot bg" aria-hidden="true"></span
+                  ><span class="tdot l1" aria-hidden="true"></span
+                  ><span class="tdot ac" aria-hidden="true"></span>暖夜
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <header class="hero wrap">
+      <div class="hero-grid" aria-hidden="true"></div>
+      <div class="hero-in">
+        <h1>
+          <span class="hd-dot" aria-hidden="true"></span>Pi · 我的终端 AI 编排者
+        </h1>
+        <p class="hero-sub">
+          pi 保持极简:<b>7 个内置工具</b>、<b>4 类扩展物</b>,不内置
+          MCP。我在它之上叠加了 <b>85 个技能</b>、<b>20 个智能体</b>与
+          <b>4 个 MCP</b>,把它塑造成自己的编排工作流。
+        </p>
+        <a class="cta" href="#architecture"
+          >查看架构图
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M4 6l4 4 4-4"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </a>
+      </div>
+    </header>
+
+    <main>
+      <!-- ============ 2. 架构图 ============ -->
+      <section id="architecture" class="wrap">
+        <div class="sec-head reveal">
+          <span class="sec-mono">Architecture</span>
+          <div class="sec-bar"></div>
+          <h2>一张图看懂它在跑什么</h2>
+          <p class="lead">
+            三层结构:上为 pi 核心引擎,中为 agent 基础设施,下为业务 / 开发 /
+            延展。连接线随滚动绘制,节点逐个入场,每层的数字都来自实际盘点。
+          </p>
+        </div>
+
+        <div class="arch-stage" id="archStage">
+          <svg class="arch-svg" id="archSvg" aria-hidden="true"></svg>
+
+          <!-- Band A(上):核心引擎 -->
+          <div class="band" id="bandA">
+            <div class="band-head">
+              <span class="b-dot"></span><span class="b-cn">核心引擎</span
+              ><span class="b-mono">Core Engine</span>
+            </div>
+            <div class="band-a stagger">
+              <div
+                class="node main reveal"
+                tabindex="0"
+                data-tip="极简终端编码内核,刻意不做 MCP / sub-agents / 权限弹窗,靠 4 类扩展物塑形"
+              >
+                <span class="pulse" aria-hidden="true"></span>
+                <span class="hint" aria-hidden="true"></span>
+                <span class="nm">pi engine <span class="tag">v0.83</span></span>
+                <span class="ds">极简编码内核 · 4 类扩展物塑形 · MIT</span>
+              </div>
+              <div class="subs">
+                <div
+                  class="node reveal"
+                  tabindex="0"
+                  data-tip="read / write / edit / bash 加只读的 grep / find / ls,可用 --tools 控制"
+                >
+                  <span class="hint" aria-hidden="true"></span>
+                  <span class="nm">内置工具 <span class="x">×7</span></span>
+                  <span class="ds"
+                    >read · write · edit · bash · grep · find · ls</span
+                  >
+                </div>
+                <div
+                  class="node reveal"
+                  tabindex="0"
+                  data-tip="JSONL 树形会话,自由分支与合并,/fork /clone /tree"
+                >
+                  <span class="hint" aria-hidden="true"></span>
+                  <span class="nm">会话树与分支</span>
+                  <span class="ds">/fork · /clone · /tree</span>
+                </div>
+                <div
+                  class="node reveal"
+                  tabindex="0"
+                  data-tip="阈值触发,结构化摘要压缩,也可 /compact 手动压缩"
+                >
+                  <span class="hint" aria-hidden="true"></span>
+                  <span class="nm">上下文自动压缩</span>
+                  <span class="ds">compaction · 结构化摘要</span>
+                </div>
+                <div
+                  class="node reveal"
+                  tabindex="0"
+                  data-tip="订阅登录 6 家 · API key 30+ 家,思考 7 档 off 到 max,models.json 挂兼容端点"
+                >
+                  <span class="hint" aria-hidden="true"></span>
+                  <span class="nm"><span class="x">30+</span> 模型路由</span>
+                  <span class="ds">思考 7 档 off → max</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Band Infra(中):agent 基础设施 -->
+          <div class="band" id="bandInfra">
+            <div class="band-head">
+              <span class="b-dot"></span><span class="b-cn">Agent 基础设施</span
+              ><span class="b-mono">Infrastructure</span>
+            </div>
+            <div class="band-grid stagger">
+              <div class="gcard reveal">
+                <div class="gcard-in">
+                  <div class="ghead">
+                    <span class="g-title">Extensions + MCP</span
+                    ><span class="g-count">~15 · ×2</span
+                    ><span class="g-sub"
+                      >TypeScript 模块 + settings/mcp.json,支撑 pi
+                      运行的基础设施</span
+                    >
+                  </div>
+                  <div class="chips">
+                    <span class="chip" tabindex="0" data-tip="上下文压缩运行时"
+                      >pi-dcp</span
+                    >
+                    <span
+                      class="chip"
+                      tabindex="0"
+                      data-tip="目标驱动的长任务追踪"
+                      >pi-goal</span
+                    >
+                    <span class="chip" tabindex="0" data-tip="子智能体调度"
+                      >pi-subagents</span
+                    >
+                    <span
+                      class="chip"
+                      tabindex="0"
+                      data-tip="扩展安装与更新管理"
+                      >pi-extension-manager</span
+                    >
+                    <span
+                      class="chip"
+                      tabindex="0"
+                      data-tip="LSP / ast-grep / 复杂度与安全扫描"
+                      >pi-lens</span
+                    >
+                    <span class="chip" tabindex="0" data-tip="Cron 定时任务调度"
+                      >pi-kimi-cron</span
+                    >
+                    <span class="chip" tabindex="0" data-tip="清理过期会话"
+                      >session-cleaner</span
+                    >
+                    <span
+                      class="chip"
+                      tabindex="0"
+                      data-tip="Powerline 风格 footer,实时上下文用量"
+                      >pi-powerline-footer</span
+                    >
+                    <span class="chip" tabindex="0" data-tip="侧边栏面板"
+                      >pi-sidebar-panel</span
+                    >
+                    <span class="chip" tabindex="0" data-tip="思考过程面板"
+                      >pi-think-panel</span
+                    >
+                    <span class="chip" tabindex="0" data-tip="模型收藏"
+                      >pi-model-favorites</span
+                    >
+                    <span class="chip" tabindex="0" data-tip="扩展总览"
+                      >pi-ext-fan</span
+                    >
+                    <span
+                      class="chip"
+                      tabindex="0"
+                      data-tip="Bailian token 用量规划"
+                      >pi-bailian-token-plan</span
+                    >
+                    <span class="chip" tabindex="0" data-tip="TTS 语音播报"
+                      >pi-ext-tts-mimo</span
+                    >
+                    <span class="chip" tabindex="0" data-tip="rpiv 工作流配置档"
+                      >rpiv-profiles</span
+                    >
+                  </div>
+                  <div class="vcards">
+                    <div
+                      class="node reveal"
+                      tabindex="0"
+                      data-tip="上下文压缩运行时:读文件、跑 shell、搜代码,压缩上下文"
+                    >
+                      <span class="hint" aria-hidden="true"></span>
+                      <span class="nm">lean-ctx</span>
+                      <span class="ds">上下文压缩运行时</span>
+                    </div>
+                    <div
+                      class="node reveal"
+                      tabindex="0"
+                      data-tip="代码知识图谱:函数搜索、调用链追踪、架构概览"
+                    >
+                      <span class="hint" aria-hidden="true"></span>
+                      <span class="nm">codebase-memory</span>
+                      <span class="ds">代码知识图谱</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="gcard reveal">
+                <div class="gcard-in">
+                  <div class="ghead">
+                    <span class="g-title">Agent 团队 + 基础设施 Skills</span
+                    ><span class="g-count">×20 · ~6</span
+                    ><span class="g-sub"
+                      >~/.pi/agent/agents · ~/.pi/agent/skills</span
+                    >
+                  </div>
+                  <div class="vcards">
+                    <div
+                      class="node reveal"
+                      tabindex="0"
+                      data-tip="干活主力,高速执行,workhorse-gate 限权"
+                    >
+                      <span class="hint" aria-hidden="true"></span>
+                      <span class="nm"
+                        >workhorse <span class="x">牛马狗</span></span
+                      >
+                      <span class="ds">干活主力</span>
+                    </div>
+                    <div
+                      class="node reveal"
+                      tabindex="0"
+                      data-tip="review 把关,深度推理,思考 max"
+                    >
+                      <span class="hint" aria-hidden="true"></span>
+                      <span class="nm"
+                        >oldfox <span class="x">老法师</span></span
+                      >
+                      <span class="ds">把关与 review</span>
+                    </div>
+                    <div
+                      class="node reveal"
+                      tabindex="0"
+                      data-tip="并行探索与信息收集"
+                    >
+                      <span class="hint" aria-hidden="true"></span>
+                      <span class="nm">Explore</span>
+                      <span class="ds">探索</span>
+                    </div>
+                    <div class="node reveal" tabindex="0" data-tip="通用任务">
+                      <span class="hint" aria-hidden="true"></span>
+                      <span class="nm">general-purpose</span>
+                      <span class="ds">通用</span>
+                    </div>
+                    <div
+                      class="node reveal span2"
+                      tabindex="0"
+                      data-tip="discover → research → design → plan → implement → validate,流水线内部角色"
+                    >
+                      <span class="hint" aria-hidden="true"></span>
+                      <span class="nm"
+                        >rpiv 工作流角色 <span class="x">×16</span></span
+                      >
+                      <span class="ds"
+                        >discover → research → design → plan → implement →
+                        validate</span
+                      >
+                    </div>
+                  </div>
+                  <div class="sblock">
+                    <div class="ghead">
+                      <span class="g-title">基础设施技能</span
+                      ><span class="g-count">~6</span>
+                    </div>
+                    <div class="chips">
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="定制 pi 配置与设置"
+                        >customize-pi</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="查询与配置 lean-ctx"
+                        >customize-lean-ctx</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="发现并安装 agent 技能"
+                        >find-skills</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="强制完整输出,禁占位符"
+                        >full-output-enforcement</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="OSC 切换终端主题"
+                        >random-theme-osc</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="本地代码库高效搜索"
+                        >local-file-search</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Band Biz(下):业务 / 开发 / 延展 -->
+          <div class="band" id="bandBiz">
+            <div class="band-head">
+              <span class="b-dot"></span
+              ><span class="b-cn">业务 / 开发 / 延展</span
+              ><span class="b-mono">Business &amp; Extension</span>
+            </div>
+            <div class="band-grid d stagger">
+              <div class="gcard reveal">
+                <div class="gcard-in">
+                  <div class="ghead">
+                    <span class="g-title">Skills</span
+                    ><span class="g-count">~77</span
+                    ><span class="g-sub">业务 · 开发 · 延展类技能</span>
+                  </div>
+                  <div class="sblock">
+                    <div class="ghead">
+                      <span class="g-title">办公自动化</span
+                      ><span class="g-count">办公自动化 ×22</span>
+                    </div>
+                    <div class="chips">
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="IM 消息与群聊管理"
+                        >im</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="云文档创建与编辑"
+                        >doc</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="多维表格 Base"
+                        >base</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="电子表格读写"
+                        >sheets</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="日历与日程"
+                        >calendar</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="邮箱收发"
+                        >mail</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="妙记纪要"
+                        >minutes</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="审批流程"
+                        >approval</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="画板"
+                        >whiteboard</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="视频会议"
+                        >vc</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="知识库"
+                        >wiki</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="任务管理"
+                        >task</span
+                      >
+                      <span
+                        class="chip dim"
+                        tabindex="0"
+                        data-tip="contact · drive · event 等 10 个"
+                        >+10 <b>更多</b></span
+                      >
+                    </div>
+                  </div>
+                  <div class="sblock">
+                    <div class="ghead">
+                      <span class="g-title">车云业务工程</span
+                      ><span class="g-count">xxx</span>
+                    </div>
+                    <div class="chips">
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="xxx Redis VIN 扫描"
+                        >xxx</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="CI/CD 全链路部署"
+                        >cicd-fullchain</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="快速开发部署"
+                        >cicd-quick</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="K8s 部署验证与排障"
+                        >k8s-troubleshoot</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="读密钥,生成 K8s Secret"
+                        >xxx-vault-qa</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="CI/CD pipeline 测试报告"
+                        >xxx-lbs-test-report</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="Redis VIN 扫描"
+                        >redis-vin-scanner</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="GitOps 提交把关"
+                        >gitops-commit-check</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="friction 报表生成"
+                        >friction-report</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="xxx 统计查询"
+                        >xxx-ds-query</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="xxx K8s 门户登录"
+                        >xxx-kube-login</span
+                      >
+                      <span
+                        class="chip dim"
+                        tabindex="0"
+                        data-tip="xxx-lbs-new-service-design · xxx-cloud-quality-verify 等 3 个"
+                        >+3 <b>更多</b></span
+                      >
+                    </div>
+                  </div>
+                  <div class="sblock">
+                    <div class="ghead">
+                      <span class="g-title">前端设计</span
+                      ><span class="g-count">~13</span>
+                    </div>
+                    <div class="chips">
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="反 AI 模板 UI 审查"
+                        >anti-ui-slop</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="前端设计品味规范"
+                        >design-taste-frontend</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="v1 版设计品味规范"
+                        >design-taste-frontend-v1</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="高端视觉规范"
+                        >high-end-visual-design</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="GSAP 动效与编辑排版"
+                        >gpt-taste</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="品牌套件图像生成"
+                        >brandkit</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="Web 图像方向"
+                        >imagegen-frontend-web</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="移动端图像方向"
+                        >imagegen-frontend-mobile</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="极简编辑风 UI"
+                        >minimalist-ui</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="工业粗野风 UI"
+                        >industrial-brutalist-ui</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="Stitch 设计系统"
+                        >stitch-design-taste</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="图像转代码"
+                        >image-to-code</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="现有项目升级"
+                        >redesign-existing-projects</span
+                      >
+                    </div>
+                  </div>
+                  <div class="sblock">
+                    <div class="ghead">
+                      <span class="g-title">开发工具链</span
+                      ><span class="g-count">工具</span>
+                    </div>
+                    <div class="chips">
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="GitHub 操作指南,gh CLI 优先"
+                        >github-usage</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="浏览器自动化 CLI"
+                        >agent-browser</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="cmux 拓扑与路由控制"
+                        >cmux</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="cmux 浏览器自动化"
+                        >cmux-browser</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="文件转 Markdown"
+                        >markitdown</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="联网搜索 Tavily"
+                        >tavily-search</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="LiteLLM 代理管理"
+                        >litellm</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="Bailian CLI"
+                        >bailian-cli</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="制品库 token 自动化"
+                        >repo-token</span
+                      >
+                      <span
+                        class="chip dim"
+                        tabindex="0"
+                        data-tip="mcp-scripting · pi-lens-ast-grep 等 2 个"
+                        >+2 <b>更多</b></span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="gcard reveal">
+                <div class="gcard-in">
+                  <div class="ghead">
+                    <span class="g-title">外部接入</span
+                    ><span class="g-sub">External</span>
+                  </div>
+                  <div class="sblock">
+                    <div class="ghead">
+                      <span class="g-title">外部业务</span
+                      ><span class="g-sub">xxx 命名空间</span>
+                    </div>
+                    <div class="chips">
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="经 xxx 代理,流水线产出 xxx 镜像"
+                        >CI/CD</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="Kubernetes 部署与排障"
+                        >K8s</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="Maven token 自动化生成"
+                        >制品库</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="读密钥,生成 K8s Secret"
+                        >密钥管理</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="4 集群事件流,xxx 数据管道"
+                        >Kafka</span
+                      >
+                      <span class="chip" tabindex="0" data-tip="xxx VIN 扫描"
+                        >Redis</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="xxx 统计库"
+                        >PostgreSQL</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="IM / 文档 / 多维表格 / 日历 / 审批,贯穿所有流程"
+                        >办公自动化</span
+                      >
+                    </div>
+                  </div>
+                  <div class="sblock">
+                    <div class="ghead">
+                      <span class="g-title">MCP 接入</span
+                      ><span class="g-count">×2</span>
+                    </div>
+                    <div class="chips">
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="浏览器调试与自动化,走 xxx 代理"
+                        >chrome-devtools</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="联网搜索,LLM 友好的结果"
+                        >anysearch</span
+                      >
+                    </div>
+                  </div>
+                  <div class="sblock">
+                    <div class="ghead">
+                      <span class="g-title">终端</span
+                      ><span class="g-sub">cmux 拓扑 · ghostty 同步</span>
+                    </div>
+                    <div class="chips">
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="多窗格拓扑与路由控制"
+                        >cmux</span
+                      >
+                      <span
+                        class="chip"
+                        tabindex="0"
+                        data-tip="主题与 pi 同步,random-theme-osc 换肤"
+                        >ghostty</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 3. 默认 vs 增强 ============ -->
+      <section id="compare" class="wrap">
+        <div class="sec-head reveal">
+          <span class="sec-mono">Base vs Overlay</span>
+          <div class="sec-bar"></div>
+          <h2>极简内核,被我叠加成什么样</h2>
+          <p class="lead">
+            左边是 pi 出厂的样子,右边是我叠加之后的日常。两边都是同一份
+            pi,差别全在扩展物。
+          </p>
+        </div>
+        <div class="cmp-grid stagger">
+          <div class="card reveal">
+            <div class="inner">
+              <div class="cmp-title">
+                pi 原生 <span class="cmp-sub">BASE</span>
+              </div>
+              <ul class="rows">
+                <li><span>内置工具</span><b>7 个</b></li>
+                <li><span>扩展物</span><b>4 类 · TypeScript 直载</b></li>
+                <li><span>会话</span><b>JSONL 树形 + /fork</b></li>
+                <li><span>上下文</span><b>自动压缩 compaction</b></li>
+                <li><span>模型</span><b>订阅 6 家 · API key 30+ 家</b></li>
+                <li><span>刻意不做</span><b>MCP / sub-agents / 权限弹窗</b></li>
+              </ul>
+            </div>
+          </div>
+          <div class="card accent reveal">
+            <div class="inner">
+              <div class="cmp-title">
+                我的叠加 <span class="cmp-sub">OVERLAY</span>
+              </div>
+              <ul class="rows">
+                <li><span>Skills</span><b>85 个 · 24 通用 + 61 业务</b></li>
+                <li><span>Agents</span><b>20 个 · 含 16 个 rpiv 角色</b></li>
+                <li>
+                  <span>MCP</span><b>4 个 · 上下文 / 图谱 / 浏览器 / 搜索</b>
+                </li>
+                <li><span>Extensions</span><b>~15 个</b></li>
+                <li>
+                  <span>外部栈</span
+                  ><b>CI/CD · K8s · 密钥管理 · Kafka · 办公自动化</b>
+                </li>
+                <li><span>身份</span><b>编排者 · APPEND_SYSTEM 五条</b></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 4. 能力归类 bento ============ -->
+      <section id="capabilities" class="wrap">
+        <div class="sec-head reveal">
+          <span class="sec-mono">Capabilities</span>
+          <div class="sec-bar"></div>
+          <h2>能力归类,五块拼图</h2>
+          <p class="lead">从审美到工程,从办公自动化到车云,都是同一个技能库的切片。</p>
+        </div>
+        <div class="bento stagger">
+          <div class="card sp7 tall reveal">
+            <div class="inner">
+              <div class="c-head">
+                <h3>设计与审美</h3>
+                <span class="cnt">×21</span>
+              </div>
+              <p class="c-lead">
+                把「不模板」写进规范:色板、排版、动效、图像方向,五个前端 skill
+                的综合。
+              </p>
+              <div class="tags">
+                <span class="chip">anti-ui-slop</span>
+                <span class="chip">design-taste-frontend</span>
+                <span class="chip">high-end-visual-design</span>
+                <span class="chip">gpt-taste</span>
+                <span class="chip">brandkit</span>
+                <span class="chip">imagegen-frontend-web</span>
+                <span class="chip">imagegen-frontend-mobile</span>
+                <span class="chip">minimalist-ui</span>
+                <span class="chip">industrial-brutalist-ui</span>
+                <span class="chip">stitch-design-taste</span>
+                <span class="chip">image-to-code</span>
+                <span class="chip">redesign-existing-projects</span>
+                <span class="chip dim">+9</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card sp5 reveal">
+            <div class="inner">
+              <div class="c-head">
+                <h3>办公自动化</h3>
+                <span class="cnt">×22</span>
+              </div>
+              <p class="c-lead">办公自动化全家桶:从 IM 到审批,一条链路贯穿。</p>
+              <div class="tags">
+                <span class="chip">im</span>
+                <span class="chip">doc</span>
+                <span class="chip">base</span>
+                <span class="chip">sheets</span>
+                <span class="chip">calendar</span>
+                <span class="chip">mail</span>
+                <span class="chip">minutes</span>
+                <span class="chip">approval</span>
+                <span class="chip">whiteboard</span>
+                <span class="chip">vc</span>
+                <span class="chip">wiki</span>
+                <span class="chip">task</span>
+                <span class="chip dim">+10</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card sp5 reveal">
+            <div class="inner">
+              <div class="c-head">
+                <h3>车云业务工程</h3>
+                <span class="cnt">xxx</span>
+              </div>
+              <p class="c-lead">
+                从代码提交到 K8s 部署的全链路,含 Kafka、密钥管理、VIN 扫描与报表。
+              </p>
+              <div class="tags">
+                <span class="chip">xxx</span>
+                <span class="chip">cicd-fullchain</span>
+                <span class="chip">cicd-quick</span>
+                <span class="chip">k8s-troubleshoot</span>
+                <span class="chip">xxx-vault-qa</span>
+                <span class="chip">xxx-lbs-test-report</span>
+                <span class="chip">redis-vin-scanner</span>
+                <span class="chip">gitops-commit-check</span>
+                <span class="chip">friction-report</span>
+                <span class="chip">xxx-ds-query</span>
+                <span class="chip">xxx-kube-login</span>
+                <span class="chip dim">+3</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card sp7 tall reveal">
+            <div class="inner">
+              <div class="c-head">
+                <h3>工程效能</h3>
+                <span class="cnt">工具链</span>
+              </div>
+              <p class="c-lead">
+                上下文、代码理解、浏览器与终端自动化,把重复劳动交给工具。
+              </p>
+              <div class="tags">
+                <span class="chip">lean-ctx</span>
+                <span class="chip">pi-lens</span>
+                <span class="chip">agent-browser</span>
+                <span class="chip">markitdown</span>
+                <span class="chip">cmux</span>
+                <span class="chip">cmux-browser</span>
+                <span class="chip">tavily-search</span>
+                <span class="chip">local-file-search</span>
+                <span class="chip">github-usage</span>
+                <span class="chip">litellm</span>
+                <span class="chip">full-output-enforcement</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card sp12 reveal">
+            <div class="inner">
+              <div class="c-head">
+                <h3>智能体团队</h3>
+                <span class="cnt">×20</span>
+              </div>
+              <p class="c-lead">
+                一个编排者,加 19 个角色,跑在 rpiv
+                流水线上:先研究,再设计,后实现,最后验证。
+              </p>
+              <div class="tags">
+                <span class="chip">workhorse 牛马狗</span>
+                <span class="chip">oldfox 老法师</span>
+                <span class="chip">Explore</span>
+                <span class="chip">general-purpose</span>
+                <span class="chip">discover</span>
+                <span class="chip">research</span>
+                <span class="chip">design</span>
+                <span class="chip">plan</span>
+                <span class="chip">implement</span>
+                <span class="chip">validate</span>
+                <span class="chip">review</span>
+                <span class="chip">remediate</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 5. Agent 团队特写 ============ -->
+      <section id="agents" class="wrap">
+        <div class="sec-head reveal">
+          <span class="sec-mono">The Team</span>
+          <div class="sec-bar"></div>
+          <h2>一个干活的,一个把关的</h2>
+          <p class="lead">
+            编排者身份规定:研究必须派 sub-agent,不自己顺序执行,没有 review
+            不标完成。
+          </p>
+        </div>
+        <div class="agent-grid stagger">
+          <div class="card reveal">
+            <div class="inner">
+              <div class="c-head">
+                <h3>牛马狗 workhorse</h3>
+                <span class="cnt">干活主力</span>
+              </div>
+              <div class="role">
+                <span class="k">职责</span
+                ><span
+                  >写代码、调查、测试、部署,先读后写,最小改动,验证闭环</span
+                >
+              </div>
+              <div class="role">
+                <span class="k">限权</span
+                ><span
+                  >workhorse-gate:只动 $HOME
+                  内文件,禁危险命令,禁改配置目录</span
+                >
+              </div>
+              <div class="role">
+                <span class="k">定位</span><span class="v">高速执行</span>
+              </div>
+              <div class="role">
+                <span class="k">原则</span
+                ><span>证据优先,错误自愈,修复不了就报告明确信息</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card reveal">
+            <div class="inner">
+              <div class="c-head">
+                <h3>老法师 oldfox</h3>
+                <span class="cnt">把关</span>
+              </div>
+              <div class="role">
+                <span class="k">职责</span
+                ><span>审阅改动、架构判断、复杂决策兜底</span>
+              </div>
+              <div class="role">
+                <span class="k">定位</span
+                ><span class="v">深度推理 · 思考 max</span>
+              </div>
+              <div class="role">
+                <span class="k">方式</span
+                ><span>把全部上下文交给它,给最强判断,再决定改还是不改</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card wide reveal">
+            <div class="inner">
+              <div class="c-head">
+                <h3>编排者身份</h3>
+                <span class="cnt">APPEND_SYSTEM</span>
+              </div>
+              <ol class="rules">
+                <li><b>研究必须派 sub-agent</b>,不让主线程自己做长调研</li>
+                <li><b>禁止自己顺序执行</b>,能并行就并行,能派就派</li>
+                <li><b>没有 review 不标完成</b>,交付前必须过一遍把关</li>
+                <li><b>不许假设问题已知</b>,问题要先调查取证</li>
+                <li><b>证据说话</b>,结论要有出处</li>
+              </ol>
+              <div class="flow">
+                <div class="step"><i></i>分析</div>
+                <div class="link"></div>
+                <div class="step"><i></i>派遣</div>
+                <div class="link"></div>
+                <div class="step"><i></i>验证</div>
+                <div class="link"></div>
+                <div class="step"><i></i>汇总</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 6. 配置快照 ============ -->
+      <section id="config" class="wrap">
+        <div class="sec-head reveal">
+          <span class="sec-mono">Snapshot</span>
+          <div class="sec-bar"></div>
+          <h2>配置快照,一页看全</h2>
+          <p class="lead">主题、铁律、技能库与监控,都是当前真实生效的配置。</p>
+        </div>
+        <div class="cfg-grid stagger">
+          <div class="card reveal">
+            <div class="inner">
+              <div class="cfg-item">
+                <span class="cfg-k">默认配置</span>
+                <span class="cfg-v"><b>开箱即用</b> · 7 档思考深度</span>
+              </div>
+              <div class="cfg-item">
+                <span class="cfg-k">主题</span>
+                <span class="cfg-v"
+                  ><b>high-contrast-dark</b> · 51 色 token · 热重载 · ghostty
+                  同步</span
+                >
+              </div>
+              <div class="cfg-item">
+                <span class="cfg-k">Cron 监控</span>
+                <span class="cfg-v"
+                  >11 个任务目录 · <b>b123xxxx</b> 每 10 分钟检查
+                  xxx 部署状态</span
+                >
+              </div>
+              <div class="cfg-item">
+                <span class="cfg-k">Skill 库</span>
+                <span class="cfg-v"
+                  >~/.pi/agent/skills · <span class="dim">24 个通用</span
+                  ><br />~/.agents/skills · <span class="dim">61 个业务</span
+                  ><br />项目内 .pi/skills · <span class="dim">按需</span></span
+                >
+              </div>
+            </div>
+          </div>
+
+          <div class="card reveal">
+            <div class="inner">
+              <div class="c-head">
+                <h3>AGENTS.md 六条铁律</h3>
+                <span class="cnt">每次会话自动注入</span>
+              </div>
+              <ol class="rules">
+                <li><b>先想后写</b>,想清楚再动手</li>
+                <li><b>简单优先</b>,不引入不必要的复杂度</li>
+                <li><b>外科手术式改动</b>,只改需要改的</li>
+                <li><b>目标驱动执行</b>,每一步都有目的</li>
+                <li><b>用 grep 不用 bash</b>,搜索走专用工具</li>
+                <li><b>搜索走 anysearch</b>,联网查询统一入口</li>
+              </ol>
+              <p class="rule-note">
+                另有一份 APPEND_SYSTEM.md,规定编排者身份的行为边界。
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="wrap">
+      <div class="foot">
+        <span><b>pi v0.83</b> · MIT · 单文件 HTML</span>
+        <span>© <span id="yr">2025</span> · 我的终端 AI 编排者</span>
+      </div>
+    </footer>
+
+    <div id="tooltip" role="tooltip">
+      <span class="tick"></span><span id="tipText"></span>
+    </div>
+
+    <script>
+      (function () {
+        "use strict";
+        var mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+        var reduced = mq.matches;
+
+        /* ---------- 主题切换(6 主题,localStorage 记忆) ---------- */
+        var THEMES = {
+          paper: { name: "纸白", group: "light" },
+          warm: { name: "暖纸", group: "light" },
+          studio: { name: "冷蓝", group: "light" },
+          oled: { name: "OLED 墨", group: "dark" },
+          mist: { name: "雾夜", group: "dark" },
+          ember: { name: "暖夜", group: "dark" },
+        };
+        var THEME_KEY = "pi-showcase-theme";
+        var metaScheme = document.querySelector('meta[name="color-scheme"]');
+        var themeBtn = document.getElementById("themeBtn");
+        var themePanel = document.getElementById("themePanel");
+        var themeName = document.getElementById("themeName");
+        function applyTheme(t, persist) {
+          if (!THEMES[t]) t = "warm";
+          document.documentElement.setAttribute("data-theme", t);
+          if (metaScheme)
+            metaScheme.setAttribute(
+              "content",
+              THEMES[t].group === "dark" ? "dark" : "light",
+            );
+          themeName.textContent = THEMES[t].name;
+          themePanel.querySelectorAll(".tp-opt").forEach(function (o) {
+            var on = o.getAttribute("data-theme-val") === t;
+            o.classList.toggle("active", on);
+            o.setAttribute("aria-checked", on ? "true" : "false");
+          });
+          if (persist !== false) {
+            try {
+              localStorage.setItem(THEME_KEY, t);
+            } catch (e) {}
+          }
+        }
+        function openPanel() {
+          themePanel.classList.add("open");
+          themeBtn.setAttribute("aria-expanded", "true");
+        }
+        function closePanel() {
+          themePanel.classList.remove("open");
+          themeBtn.setAttribute("aria-expanded", "false");
+        }
+        var savedTheme = null;
+        try {
+          savedTheme = localStorage.getItem(THEME_KEY);
+        } catch (e) {}
+        applyTheme(savedTheme, false);
+        themeBtn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          if (themePanel.classList.contains("open")) closePanel();
+          else openPanel();
+        });
+        themePanel.addEventListener("click", function (e) {
+          var opt = e.target.closest(".tp-opt");
+          if (!opt) return;
+          applyTheme(opt.getAttribute("data-theme-val"));
+          closePanel();
+        });
+        document.addEventListener("click", function (e) {
+          if (!e.target.closest("#themeSw")) closePanel();
+        });
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape") closePanel();
+        });
+
+        /* ---------- nav 滚动高亮(IntersectionObserver) ---------- */
+        var secLinks = {};
+        document.querySelectorAll('.nav-link[href^="#"]').forEach(function (a) {
+          var id = a.getAttribute("href").slice(1);
+          if (document.getElementById(id)) secLinks[id] = a;
+        });
+        var curSec = null;
+        if ("IntersectionObserver" in window) {
+          var secIO = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (entry) {
+                var link = secLinks[entry.target.id];
+                if (!link) return;
+                if (entry.isIntersecting) {
+                  if (curSec !== entry.target.id) {
+                    if (curSec && secLinks[curSec])
+                      secLinks[curSec].classList.remove("active");
+                    curSec = entry.target.id;
+                    link.classList.add("active");
+                  }
+                } else if (curSec === entry.target.id) {
+                  link.classList.remove("active");
+                  curSec = null;
+                }
+              });
+            },
+            { rootMargin: "-45% 0px -50% 0px", threshold: 0 },
+          );
+          Object.keys(secLinks).forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) secIO.observe(el);
+          });
+        }
+
+        /* ---------- 入场:IntersectionObserver + stagger ---------- */
+        var revealEls = document.querySelectorAll(".reveal");
+        if (reduced || !("IntersectionObserver" in window)) {
+          revealEls.forEach(function (el) {
+            el.classList.add("in");
+          });
+        } else {
+          var io = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (entry) {
+                if (!entry.isIntersecting) return;
+                var el = entry.target;
+                var group = el.closest(".stagger") || el.parentElement;
+                var idx = Array.prototype.indexOf.call(
+                  group.querySelectorAll(".reveal"),
+                  el,
+                );
+                setTimeout(
+                  function () {
+                    el.classList.add("in");
+                  },
+                  Math.min(idx, 8) * 80,
+                );
+                io.unobserve(el);
+              });
+            },
+            { threshold: 0.12, rootMargin: "0px 0px -36px 0px" },
+          );
+          revealEls.forEach(function (el) {
+            io.observe(el);
+          });
+        }
+
+        /* ---------- 自绘 tooltip ---------- */
+        var tip = document.getElementById("tooltip");
+        var tipText = document.getElementById("tipText");
+        function showTip(el) {
+          tipText.textContent = el.getAttribute("data-tip") || "";
+          var r = el.getBoundingClientRect();
+          var below = r.top < 90;
+          var x = Math.max(
+            130,
+            Math.min(r.left + r.width / 2, window.innerWidth - 130),
+          );
+          tip.style.left = x + "px";
+          tip.style.top = (below ? r.bottom + 10 : r.top - 10) + "px";
+          tip.style.transform =
+            "translate(-50%, " + (below ? "0%" : "-100%") + ")";
+          tip.classList.add("on");
+        }
+        function hideTip() {
+          tip.classList.remove("on");
+        }
+        document.querySelectorAll("[data-tip]").forEach(function (el) {
+          el.addEventListener("mouseenter", function () {
+            showTip(el);
+          });
+          el.addEventListener("mouseleave", function () {
+            hideTip();
+            el.classList.remove("tip-open");
+          });
+          el.addEventListener("focus", function () {
+            showTip(el);
+          });
+          el.addEventListener("blur", hideTip);
+          el.addEventListener("click", function (e) {
+            e.stopPropagation();
+            if (el.classList.contains("tip-open")) {
+              el.classList.remove("tip-open");
+              hideTip();
+            } else {
+              document.querySelectorAll(".tip-open").forEach(function (n) {
+                n.classList.remove("tip-open");
+              });
+              el.classList.add("tip-open");
+              showTip(el);
+            }
+          });
+        });
+        document.addEventListener("click", function (e) {
+          if (!e.target.closest("[data-tip]")) {
+            document.querySelectorAll(".tip-open").forEach(function (n) {
+              n.classList.remove("tip-open");
+            });
+            hideTip();
+          }
+        });
+
+        /* ---------- 架构图 SVG 连接线 scroll scrub ---------- */
+        var stage = document.getElementById("archStage");
+        var svg = document.getElementById("archSvg");
+        var NS = "http://www.w3.org/2000/svg";
+        var BANDS = ["bandA", "bandInfra", "bandBiz"];
+        var paths = [],
+          ticking = false,
+          prog = 0;
+
+        function isMobile() {
+          return window.innerWidth < 768;
+        }
+        function bandGeom(id) {
+          var el = document.getElementById(id);
+          var s = stage.getBoundingClientRect(),
+            r = el.getBoundingClientRect();
+          return {
+            top: r.top - s.top,
+            bottom: r.bottom - s.top,
+            cx: r.left - s.left + r.width / 2,
+          };
+        }
+        function clearSvg() {
+          while (svg.firstChild) svg.removeChild(svg.firstChild);
+        }
+        function build(full) {
+          if (isMobile()) {
+            clearSvg();
+            paths = [];
+            return;
+          }
+          var W = stage.clientWidth,
+            H = stage.clientHeight;
+          svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+          var g = BANDS.map(bandGeom);
+          clearSvg();
+          paths = [];
+          for (var i = 0; i < g.length - 1; i++) {
+            var a = g[i],
+              b = g[i + 1];
+            var x1 = a.cx,
+              y1 = a.bottom,
+              x2 = b.cx + (i % 2 ? 14 : -14),
+              y2 = b.top,
+              mid = (y1 + y2) / 2;
+            var p = document.createElementNS(NS, "path");
+            p.setAttribute(
+              "d",
+              "M " +
+                x1 +
+                " " +
+                y1 +
+                " C " +
+                x1 +
+                " " +
+                mid +
+                " " +
+                x2 +
+                " " +
+                mid +
+                " " +
+                x2 +
+                " " +
+                y2,
+            );
+            p.setAttribute("class", "arch-line");
+            p.setAttribute("fill", "none");
+            p.setAttribute("stroke-width", "2.5");
+            p.setAttribute("stroke-linecap", "round");
+            p.setAttribute("stroke-dasharray", "1000");
+            p.setAttribute("stroke-dashoffset", full ? "0" : "1000");
+            p.setAttribute("opacity", "0.8");
+            p.setAttribute("data-start", String(i * 0.12));
+            svg.appendChild(p);
+            var dot = document.createElementNS(NS, "circle");
+            dot.setAttribute("cx", x2);
+            dot.setAttribute("cy", y2);
+            dot.setAttribute("r", "4");
+            dot.setAttribute("class", "arch-dot");
+            dot.setAttribute("opacity", full ? "0.75" : "0.12");
+            svg.appendChild(dot);
+            var halo = document.createElementNS(NS, "circle");
+            halo.setAttribute("cx", x2);
+            halo.setAttribute("cy", y2);
+            halo.setAttribute("r", "7");
+            halo.setAttribute("class", "arch-dot-halo");
+            svg.appendChild(halo);
+            p.dot = dot;
+            p.halo = halo;
+            paths.push(p);
+          }
+          if (!full) draw();
+        }
+        function draw() {
+          for (var i = 0; i < paths.length; i++) {
+            var p = paths[i];
+            var start = parseFloat(p.getAttribute("data-start")) || 0;
+            var pp = Math.min(1, Math.max(0, (prog - start) / (1 - start)));
+            p.setAttribute("stroke-dashoffset", String(1000 - pp * 1000));
+            if (p.dot) p.dot.setAttribute("opacity", String(0.1 + pp * 0.65));
+          }
+        }
+        function compute() {
+          var r = stage.getBoundingClientRect();
+          prog = Math.min(
+            1,
+            Math.max(0, (window.innerHeight * 0.9 - r.top) / (r.height * 0.85)),
+          );
+        }
+        function onScroll() {
+          if (ticking) return;
+          ticking = true;
+          requestAnimationFrame(function () {
+            compute();
+            if (paths.length) draw();
+            ticking = false;
+          });
+        }
+        var resizeTimer;
+        function onResize() {
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(function () {
+            build(reduced);
+            if (!reduced) {
+              compute();
+              draw();
+            }
+          }, 150);
+        }
+        if (reduced) {
+          build(true);
+        } else {
+          build(false);
+          window.addEventListener("scroll", onScroll, { passive: true });
+          window.addEventListener("resize", onResize);
+          window.addEventListener("load", function () {
+            build(false);
+            compute();
+            draw();
+          });
+        }
+
+        /* ---------- 年份 ---------- */
+        document.getElementById("yr").textContent = new Date().getFullYear();
+      })();
+    </script>
+  </body>
+</html>
