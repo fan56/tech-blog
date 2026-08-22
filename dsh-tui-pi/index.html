@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta
+      name="description"
+      content="DSH-TUI-PI：DeepSeek Harness 的全功能终端 UI——流式对话、powerline 状态栏、实时思考/工具/待办面板、子代理双视图、主题热切换，配自研子代理注册中心与零 LLM 上下文压缩。"
+    />
+    <title>DSH-TUI-PI · 让 dsh 在终端里住下来</title>
+    <style>
+      /* ============================================================
+      设计系统（单文件页面，无构建）
+      方向：技术编辑风。light/克制为主，暗色跟随系统偏好。
+      字体：中文系统栈，mono 做技术声部。
+      强调色：终端绿，全页唯一 accent。
+      圆角系统：容器 10px，终端窗口 12px。
+      内容与同目录 index.md 互为镜像。
+      ============================================================ */
+
+      :root {
+        --bg: #f6f8f7;
+        --surface: #ffffff;
+        --code-bg: #f2f5f3;
+        --ink: #171a1e;
+        --ink-2: #3e454d;
+        --ink-3: #5f6871;
+        --line: #e1e6e3;
+        --line-strong: #c8d1cb;
+        --accent: #0b7a4b;
+        --accent-strong: #0a5f3c;
+        --accent-soft: #e8f4ee;
+        --term-bg: #121815;
+        --term-bar-bg: #1a231e;
+        --term-line: #262f2a;
+        --term-ink: #d7e2da;
+        --term-dim: #93a49a;
+
+        --sans:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial,
+          sans-serif;
+        --mono:
+          ui-monospace, SFMono-Regular, Menlo, Consolas, "SF Mono", monospace;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #101412;
+          --surface: #161b18;
+          --code-bg: #121815;
+          --ink: #e9edea;
+          --ink-2: #aeb8b1;
+          --ink-3: #7d877f;
+          --line: #252d29;
+          --line-strong: #37423c;
+          --accent: #35b97e;
+          --accent-strong: #4cc791;
+          --accent-soft: #0f2419;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--sans);
+        font-size: 16px;
+        line-height: 1.75;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      a:hover {
+        color: var(--accent-strong);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+      a:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+        border-radius: 4px;
+      }
+
+      ::selection {
+        background: rgba(11, 122, 75, 0.2);
+      }
+
+      code {
+        font-family: var(--mono);
+        font-size: 0.86em;
+        background: var(--code-bg);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 0.06em 0.35em;
+      }
+
+      .container {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 56px 24px 80px;
+      }
+
+      /* ---------- 文头 ---------- */
+      .kicker {
+        font-family: var(--mono);
+        font-size: 0.76rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        color: var(--accent);
+        background: var(--accent-soft);
+        display: inline-block;
+        border-radius: 999px;
+        padding: 4px 12px;
+        margin: 0 0 20px;
+      }
+      h1 {
+        font-size: clamp(1.7rem, 4vw, 2.4rem);
+        font-weight: 700;
+        line-height: 1.3;
+        letter-spacing: -0.015em;
+        margin: 0 0 22px;
+      }
+      .lead {
+        font-size: 1.05rem;
+        font-weight: 500;
+        color: var(--ink);
+        margin: 0 0 14px;
+      }
+      .body-text,
+      article p {
+        color: var(--ink-2);
+        margin: 0 0 14px;
+      }
+      .repo-line {
+        font-size: 1rem;
+        margin: 18px 0 0;
+      }
+
+      /* ---------- 演示 GIF ---------- */
+      figure.demo {
+        margin: 26px 0;
+      }
+      figure.demo img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: 12px;
+        border: 1px solid var(--line-strong);
+        background: var(--surface);
+      }
+      figure.demo figcaption {
+        font-size: 0.84rem;
+        color: var(--ink-3);
+        margin-top: 10px;
+      }
+
+      /* ---------- 终端窗口（图表 / 安装命令） ---------- */
+      .term {
+        background: var(--term-bg);
+        border: 1px solid var(--term-line);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 14px 34px -18px rgba(0, 0, 0, 0.5);
+        margin: 22px 0;
+      }
+      .term-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 14px;
+        background: var(--term-bar-bg);
+        border-bottom: 1px solid var(--term-line);
+        font-family: var(--mono);
+        font-size: 0.74rem;
+        color: var(--term-dim);
+      }
+      .term-bar .dots {
+        display: inline-flex;
+        gap: 7px;
+      }
+      .term-bar .dot {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+      }
+      .dot-c {
+        background: #ff5f57;
+      }
+      .dot-m {
+        background: #febc2e;
+      }
+      .dot-z {
+        background: #28c840;
+      }
+      .term pre {
+        margin: 0;
+        padding: 16px 18px;
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        line-height: 1.85;
+        color: var(--term-ink);
+        overflow-x: auto;
+      }
+
+      /* ---------- 表格（命令全家福 / Reset / 三件套） ---------- */
+      .table-wrap {
+        overflow-x: auto;
+        margin: 18px 0;
+      }
+      table.agents {
+        width: 100%;
+        min-width: 520px;
+        border-collapse: collapse;
+        font-size: 0.92rem;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      table.agents th,
+      table.agents td {
+        text-align: left;
+        vertical-align: top;
+        padding: 13px 18px;
+        border-bottom: 1px solid var(--line);
+      }
+      table.agents thead {
+        background: var(--code-bg);
+      }
+      table.agents th {
+        font-family: var(--mono);
+        font-size: 0.76rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: var(--ink-3);
+      }
+      table.agents tr:last-child td {
+        border-bottom: none;
+      }
+      table.agents tbody tr:nth-child(even) {
+        background: var(--code-bg);
+      }
+      table.agents td:first-child {
+        font-family: var(--mono);
+        white-space: nowrap;
+        color: var(--ink);
+      }
+      table.agents td:last-child {
+        color: var(--ink-2);
+      }
+      /* 三列的 Reset 表：首列是场景描述，不用 mono 不锁行 */
+      table.agents.wrap-first td:first-child {
+        font-family: var(--sans);
+        white-space: normal;
+      }
+
+      /* ---------- 列表 ---------- */
+      article ul {
+        color: var(--ink-2);
+        padding-left: 1.4em;
+        margin: 0 0 14px;
+      }
+      article li {
+        margin: 6px 0;
+      }
+      article li::marker {
+        color: var(--accent);
+      }
+
+      footer {
+        margin-top: 64px;
+        padding-top: 20px;
+        border-top: 1px solid var(--line);
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        color: var(--ink-3);
+      }
+
+      @media (max-width: 640px) {
+        .container {
+          padding: 40px 18px 64px;
+        }
+        .term pre {
+          font-size: 0.72rem;
+          padding: 14px;
+        }
+        table.agents th,
+        table.agents td {
+          padding: 10px 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <p class="kicker">社区发布文稿 · 待 review · GIF 已换成真实录制</p>
+
+      <h1>DSH-TUI-PI —— 让 dsh 在终端里住下来</h1>
+
+      <p class="lead"><strong>DeepSeek Harness 的全功能 TUI</strong>：流式对话、powerline 状态栏、实时思考/工具/待办面板、子代理双视图、主题热切换——全部以纯 cordis 插件实现，不 fork、不 patch 上游一行代码。</p>
+      <p>它不是孤零零一个界面包，而是一套自研插件组合拳：TUI 本体之外，还有子代理注册中心和确定性上下文压缩两个配套插件，装齐了才是完整形态。</p>
+      <p class="repo-line">📦 <a href="https://github.com/fan56/dsh-tui-pi">https://github.com/fan56/dsh-tui-pi</a></p>
+
+      <figure class="demo">
+        <img src="https://raw.githubusercontent.com/fan56/dsh-tui-pi/main/dsh-tui-pi-demo.gif" alt="dsh-tui-pi 终端演示 GIF：todos、运行中的子代理、think/tool 面板和 powerline 底栏" loading="lazy" decoding="async" />
+        <figcaption>上图是一段真实终端录制：todos、运行中的子代理、think/tool 面板和 powerline 底栏都在动。另有 <a href="https://asciinema.org/a/BE212ZO8x1zEZyZn">asciinema 版</a>。</figcaption>
+      </figure>
+
+      <article>
+        <section>
+          <h2>界面一览</h2>
+          <div class="term">
+            <div class="term-bar">
+              <span class="dots"><span class="dot dot-c"></span><span class="dot dot-m"></span><span class="dot dot-z"></span></span>
+              <span>dsh --profile tui</span>
+            </div>
+            <pre>┌──────────────────────────────────────────────────────────────┐
+│ ~/github (Full access) │ ⎇ main        ◄─ 编辑框上沿信息条     │
+│ ┌──────────────────────────────────────────────────────┐     │
+│ │              对话流（可滚动，只留干净问答正文）           │    │
+│ │   ▸ You    这个报错帮我看看                             │    │
+│ │   ● AI     ## 排查结论                                 │    │
+│ │            1. 根因是 ……                                │    │
+│ └──────────────────────────────────────────────────────┘     │
+│ ● Todos (1/3)          ◄─ 待办面板（做完自动收起）             │
+│ 💭 thinking · 12.4s    ◄─ 思考面板                            │
+│ ⚙ read session.ts      ◄─ 工具面板                            │
+│ ❯ _                                                    │
+├──────────────────────────────────────────────────────────────┤
+│ ├─ ⠋ 牛马狗 · 21k/1m · round 2/75 · 13.6s · reading files…   │
+│ └─ ⠋ 小黄鸭 · …                       ◄─ 运行中的子代理行      │
+│ ● 正在请求…                                                  │
+├──────────────────────────────────────────────────────────────┤
+│ dsh(standard)▸☁️deepseek▸🤖gpt-5◕▸🧠32k/128k(25%)▸💬12▸🔧34▸21:03:44
+│ ⌨ Enter 发送 · Esc×2 停止 · Ctrl+G 子代理 · Tab preset        │
+└──────────────────────────────────────────────────────────────┘</pre>
+          </div>
+          <p>设计取舍：过程细节（think/tool/todo）从对话流里抽出来钉在固定位置，主对话流永远只有干净的问答正文；状态则全部沉到屏幕边缘的底栏与信息条。</p>
+        </section>
+
+        <section>
+          <h2>UI 拆解</h2>
+
+          <h3 id="powerline">Powerline 底栏</h3>
+          <p>底栏是经典 powerline 样式，所有数字都是 O(1) 维护的计数器——渲染路径从不扫描会话日志，再长的会话也不掉帧：</p>
+          <div class="term">
+            <div class="term-bar">
+              <span class="dots"><span class="dot dot-c"></span><span class="dot dot-m"></span><span class="dot dot-z"></span></span>
+              <span>powerline footer</span>
+            </div>
+            <pre> dsh(standard) ▸ ☁️ deepseek ▸ 🤖 gpt-5 ◕ ▸ 🧠 32k/128k (25%) ▸ 💬 12 msgs ▸ 🔧 34 tools ▸        21:03:44
+ └品牌+preset──┘ └─提供商──┘  └模型+思考等级┘ └─上下文用量（分档变色）─┘ └消息数─┘ └工具数┘ └时钟┘</pre>
+          </div>
+          <p>上下文用量按阈值分四档变色：50% 内正常、50%/70%/90% 逐级转橙转红，快满了瞄一眼就知道。编辑框上沿还有一条信息行：当前目录、权限徽标、git 分支：</p>
+          <div class="term">
+            <div class="term-bar">
+              <span class="dots"><span class="dot dot-c"></span><span class="dot dot-m"></span><span class="dot dot-z"></span></span>
+              <span>editor info line</span>
+            </div>
+            <pre> ~/github (Full access) │ ⎇ main
+ └─cwd──┘ └─权限徽标──┘     └分支</pre>
+          </div>
+          <p>底栏下面还有一条可开关的快捷键提示行，7 个段落各自可在设置里单独关掉，全关后一行都不占：</p>
+          <div class="term">
+            <div class="term-bar">
+              <span class="dots"><span class="dot dot-c"></span><span class="dot dot-m"></span><span class="dot dot-z"></span></span>
+              <span>footer hints</span>
+            </div>
+            <pre> ⌨ Enter: send · Esc ×2: stop · Ctrl+C ×2: quit · Ctrl+D: quit (empty) · Ctrl+G: subagents · Tab: preset · ↑↓: history</pre>
+          </div>
+
+          <h3 id="panels">Think / Tool 面板</h3>
+          <p>思考与工具各一块面板，钉在输入框上方，高度一个设置搞定（<code>dsh-tui.panelHeight</code>）：</p>
+          <div class="term">
+            <div class="term-bar">
+              <span class="dots"><span class="dot dot-c"></span><span class="dot dot-m"></span><span class="dot dot-z"></span></span>
+              <span>dsh-tui.panelHeight</span>
+            </div>
+            <pre> '1'（默认）  💭 thinking · 12.4s · 正在分析调用栈……
+              └ 一行极简：标识 + 耗时 + 最新一行，超宽右截断
+
+ '5'|'7'|'10' ┌─ 💭 thinking ──────────────────┐
+              │ 盒装面板，正文 N-1 行            │
+              └────────────────────────────────┘
+
+ 'all'       全量展示；流式思考保留 200 行活动尾部，
+             工具结果封顶 2000 行，超出显示 … (+N lines)</pre>
+          </div>
+          <p>工具面板头部自带状态：<code>⚙</code> 执行中 / <code>✔</code> 成功 / <code>✘</code> 失败 + 工具名 + 操作对象 + 耗时，成败还有不同底色；派活类操作（use_agent 等）不占工具面板，它们有自己的视图（见下）。面板自绘、随宽度自适应重排，换主题只需重画一帧。</p>
+
+          <h3 id="todos">Todo 面板</h3>
+          <p>任务清单以带边框表格呈现在输入框正上方，编号、勾选态、内容三列，三种状态三种颜色：</p>
+          <div class="term">
+            <div class="term-bar">
+              <span class="dots"><span class="dot dot-c"></span><span class="dot dot-m"></span><span class="dot dot-z"></span></span>
+              <span>todos panel</span>
+            </div>
+            <pre> ● Todos (1/3)
+ ─────────────────────────────────
+ #   ✓  Task
+ 1   ☑  定位根因
+ 2   ◐  补回归测试          ◄ 进行中
+ 3   ☐  更新文档</pre>
+          </div>
+          <p>列表为空或全部完成时整个面板自动收起，不留空壳。</p>
+
+          <h3 id="subagents-live">子代理：运行行 + 洞察视图</h3>
+          <p>每个运行中的子代理在输入框下方占一行，旋转指示器 + 名称 + 当前上下文用量 + 轮次 + 已耗时 + 最新输出尾巴，一眼看清谁在干什么：</p>
+          <div class="term">
+            <div class="term-bar">
+              <span class="dots"><span class="dot dot-c"></span><span class="dot dot-m"></span><span class="dot dot-z"></span></span>
+              <span>running agents line</span>
+            </div>
+            <pre> ● 帮我把这个 bug 修了                        ◄ 最近一次请求（常驻）
+ ├─ ⠋ 牛马狗 · ↻1 · 21k/1m · round 2/75 · 13.6s · reading src/session.ts…
+ └─ ⠋ 小黄鸭 · 8k/1m · round 1 · 4.2s · 已识别报错堆栈中的……</pre>
+          </div>
+          <p>按 <strong>Ctrl+G</strong>（或 <code>/subagents</code>）进入洞察视图，两层结构：</p>
+          <div class="term">
+            <div class="term-bar">
+              <span class="dots"><span class="dot dot-c"></span><span class="dot dot-m"></span><span class="dot dot-z"></span></span>
+              <span>/subagents viewer</span>
+            </div>
+            <pre> Ctrl+G ──► ● Sub-agents 选择层（运行中在前，最近完成 5 个）
+               │  &lt;Xk tok&gt; · 🧹 N次压缩 · 耗时 —— 每行的摘要栏
+               ▼ Enter
+            ● 单个子代理的实时转录层
+               🐳 回复  ⚙ 工具调用  ✔✘ 结果  ▎用户  🧹 DCP压缩  ☑ todos
+               尾部跟随刷新，向上滚动即脱离跟随翻历史</pre>
+          </div>
+          <p>并发上限、轮次上限都能调（<code>/agents</code> 里配置：默认并发 4、每轮 75 轮）。</p>
+
+          <h3 id="reset">Reset 的四种姿势</h3>
+          <p>「重来」在这个 TUI 里分场景各有其键：</p>
+          <div class="table-wrap">
+            <table class="agents wrap-first">
+              <thead>
+                <tr>
+                  <th scope="col">场景</th>
+                  <th scope="col">操作</th>
+                  <th scope="col">行为</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>停掉正在跑的任务</td>
+                  <td><code>Esc</code> 两连（500ms 内）</td>
+                  <td>连同子代理一起停</td>
+                </tr>
+                <tr>
+                  <td>中断本轮回复</td>
+                  <td><code>Ctrl+C</code>（运行中）</td>
+                  <td>取消当前 turn</td>
+                </tr>
+                <tr>
+                  <td>清空输入框</td>
+                  <td><code>Ctrl+C</code>（空闲时）</td>
+                  <td>编辑器文本一键清零</td>
+                </tr>
+                <tr>
+                  <td>开新会话</td>
+                  <td><code>/new</code></td>
+                  <td>脱离当前会话，清屏清面板</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>另外 <code>/settings</code> 浏览器里每组配置都有 <code>Reset to defaults</code> 行（二次确认），<code>/hotkeys</code> 编辑器里把按键清空即恢复默认绑定。</p>
+        </section>
+
+        <section>
+          <h2>命令全家福</h2>
+          <p>TUI 自带命令全部双通道注册（无会话时也能直接执行），dsh 内置命令则原样透传、绝不重新发明：</p>
+          <div class="table-wrap">
+            <table class="agents commands">
+              <thead>
+                <tr>
+                  <th scope="col">命令</th>
+                  <th scope="col">说明</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>/model</code></td>
+                  <td>选模型（含思考等级）</td>
+                </tr>
+                <tr>
+                  <td><code>/think</code></td>
+                  <td>切换当前模型的推理等级</td>
+                </tr>
+                <tr>
+                  <td><code>/agents</code></td>
+                  <td>管理本地 markdown 定义的 agent（模型、思考等级、派生深度）</td>
+                </tr>
+                <tr>
+                  <td><code>/subagents</code></td>
+                  <td>浏览子代理并查看其实时转录</td>
+                </tr>
+                <tr>
+                  <td><code>/preset [name]</code></td>
+                  <td>切换 agent preset（Tab 也可循环）</td>
+                </tr>
+                <tr>
+                  <td><code>/theme</code></td>
+                  <td>切配色方案，立即生效</td>
+                </tr>
+                <tr>
+                  <td><code>/session</code></td>
+                  <td>查看当前会话信息（id、模型、统计）</td>
+                </tr>
+                <tr>
+                  <td><code>/resume</code></td>
+                  <td>恢复一个已持久化的会话</td>
+                </tr>
+                <tr>
+                  <td><code>/export [path]</code></td>
+                  <td>导出会话日志为 JSONL</td>
+                </tr>
+                <tr>
+                  <td><code>/new</code></td>
+                  <td>开新会话</td>
+                </tr>
+                <tr>
+                  <td><code>/settings</code></td>
+                  <td>浏览器式配置编辑（命名空间、取值、重置）</td>
+                </tr>
+                <tr>
+                  <td><code>/skills</code></td>
+                  <td>管理用户技能（已装 + 可装）</td>
+                </tr>
+                <tr>
+                  <td><code>/login [provider]</code></td>
+                  <td>配置 provider API key（可搜索目录 + 打码密钥输入）</td>
+                </tr>
+                <tr>
+                  <td><code>/logout</code></td>
+                  <td>登出 provider（密钥与配置一并移除，模型立刻消失）</td>
+                </tr>
+                <tr>
+                  <td><code>/permission</code></td>
+                  <td>权限预设选择器</td>
+                </tr>
+                <tr>
+                  <td><code>/model-sync</code></td>
+                  <td>发现手写 baseURL provider 的可用模型并入配置</td>
+                </tr>
+                <tr>
+                  <td><code>/hotkeys</code></td>
+                  <td>查看/自定义快捷键（~/.dsh/keybindings.json）</td>
+                </tr>
+                <tr>
+                  <td><code>/reload</code></td>
+                  <td>从源码热重载 TUI</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>其中登录/登出是完整的图形化流程：<code>/login</code> 是可搜索的 provider 目录，API key 输入框逐字符打码显示；<code>/logout</code> 会列出所有存有凭据的 provider 供选择摘除。技能、计划、压缩等 dsh 原生命令以及你自己装的 skill 都会自动出现在补全列表里。</p>
+
+          <h3 id="preset">Agent Preset</h3>
+          <p><code>Tab</code> 循环切换，<code>/preset</code> 弹选择器，<code>/preset &lt;名字&gt;</code> 直达，<code>/preset next</code> 下一个；当前 preset 直接显示在底栏品牌段上：</p>
+          <div class="term">
+            <div class="term-bar">
+              <span class="dots"><span class="dot dot-c"></span><span class="dot dot-m"></span><span class="dot dot-z"></span></span>
+              <span>preset cycle</span>
+            </div>
+            <pre> Tab ──►  code ⇄ cordis ⇄ minimal ⇄ [standard] ──► 下一个会话生效
+                               底栏同步显示 dsh(standard)</pre>
+          </div>
+          <p>启动时默认选中 <code>standard</code>；没碰过 preset 时不下发任何预设参数，服务端配置的默认值说了算。</p>
+
+          <h3 id="theme">主题引擎</h3>
+          <p>GitHub light / dark 双配色；<code>auto</code> 模式跟随终端明暗，运行中切换也实时跟进：</p>
+          <div class="term">
+            <div class="term-bar">
+              <span class="dots"><span class="dot dot-c"></span><span class="dot dot-m"></span><span class="dot dot-z"></span></span>
+              <span>/theme hot-switch chain</span>
+            </div>
+            <pre>/theme ──► settings 变更 ──► applyThemeRef
+                                 ├─► 历史消息 ReplayOp 整屏换装
+                                 └─► 画布背景换色 + 输入区重建
+                                      （一帧节流完成，无残影）</pre>
+          </div>
+          <p>画布背景逐行涂色（BCE），在 cmux/gostty 这类终端里切主题也不会留下冻住的默认底色；想要透明背景，<code>DSH_TUI_TRANSPARENT=1</code> 一键退回。</p>
+        </section>
+
+        <section>
+          <h2>子代理：注册中心 + 三件套</h2>
+          <p>配套插件 <strong>dsh-subagent-registry</strong>（<a href="https://github.com/fan56/dsh-subagent-registry">https://github.com/fan56/dsh-subagent-registry</a>）把本地定义的自定义 agent 注册成可调用的 subagent：扫一个 agents 目录，每个 markdown 就是一个人设，主模型通过统一的 <code>use_agent</code> 工具按名字派活。招牌能力是<strong>断点续跑</strong>——跑了一半被中断的子代理，下次调用会从已保存的部分成果接着来，而不是从头再来。</p>
+          <p>我日常挂三个：</p>
+          <div class="table-wrap">
+            <table class="agents">
+              <thead>
+                <tr>
+                  <th scope="col">名字</th>
+                  <th scope="col">一句话定义</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>🦆 <strong>小黄鸭</strong> rubber-duck</td>
+                  <td>多模态视觉 agent：替你看截图、图表、报错界面并输出结构化结论，也能把数据画成图——主模型是 text-only 时它就是眼睛</td>
+                </tr>
+                <tr>
+                  <td>🐕 <strong>牛马狗</strong> workhorse</td>
+                  <td>干活的主力：写代码、调查、测试、部署全包，受安全门约束——不出 $HOME、不碰危险命令</td>
+                </tr>
+                <tr>
+                  <td>🧙 <strong>老法师</strong> oldfox</td>
+                  <td>解决难题的顾问：分析、排障、review、挑刺，专门给方案和代码把关，不做设计不动手</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>它们在 TUI 里是一等公民：运行行、洞察视图、🧹 压缩账目全都照常工作。</p>
+        </section>
+
+        <section>
+          <h2>上下文压缩：DCP</h2>
+          <p>配套插件 <strong>dsh-dcp</strong>（<a href="https://github.com/fan56/dsh-dcp">https://github.com/fan56/dsh-dcp</a>）把默认的「LLM 总结式压缩」换成确定性的上下文剪枝：压缩全程零模型调用，同样输入永远得到同样输出，路径/命令/报错原文/未完成 todo 这些硬事实逐字保留。实测约 8 万 token 的历史压到几百 token。TUI 里每次压缩以 🧹 标记呈现，子代理各自压了几次也有账可查。</p>
+        </section>
+
+        <section>
+          <h2>中文安全</h2>
+          <p>截断统一走宽度词汇表：CJK 全角 = 2 列、grapheme 永不劈半、ANSI 先裁后染。中文内容随便贴，不会错位串行。</p>
+        </section>
+
+        <section>
+          <h2>质量</h2>
+          <ul>
+            <li>零上游补丁：所有能力纯插件挂载，升级 dsh 不用重新合代码</li>
+            <li>544 个测试（37 个文件）持续护航；e2e 覆盖 24 行小终端场景</li>
+            <li>同系列还有网关网络错误的有界重试插件 dsh-llm-net-retry（<a href="https://github.com/fan56/dsh-llm-net-retry">https://github.com/fan56/dsh-llm-net-retry</a>），按需取用</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>安装</h2>
+          <div class="term">
+            <div class="term-bar">
+              <span class="dots"><span class="dot dot-c"></span><span class="dot dot-m"></span><span class="dot dot-z"></span></span>
+              <span>install</span>
+            </div>
+            <pre>$ dsh plugin --profile tui add @aiwayds/dsh-tui-pi
+$ dsh --profile tui</pre>
+          </div>
+          <p>更多配置与排障见 👉 <a href="https://github.com/fan56/dsh-tui-pi">https://github.com/fan56/dsh-tui-pi</a></p>
+        </section>
+      </article>
+
+      <footer>本文稿为社区发布预览，正式发布前以 review 后版本为准。</footer>
+    </main>
+  </body>
+</html>

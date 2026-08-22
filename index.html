@@ -30,7 +30,8 @@
         --disp:
           "Space Grotesk", -apple-system, "SF Pro Display", "PingFang SC",
           system-ui, sans-serif;
-        --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+        --mono:
+          ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
         --ease: cubic-bezier(0.16, 1, 0.3, 1);
       }
       * {
@@ -138,11 +139,7 @@
         transition: background 0.4s var(--ease);
       }
       .post:hover {
-        background: linear-gradient(
-          90deg,
-          var(--accent-soft),
-          transparent 60%
-        );
+        background: linear-gradient(90deg, var(--accent-soft), transparent 60%);
       }
       .post-date {
         font-family: var(--mono);
@@ -235,21 +232,42 @@
       <aside class="intro reveal">
         <div class="kicker">fan56 的技术博客</div>
         <h1>fan56的技术博客</h1>
-        <p class="tagline">
-          AI 工具链、终端工作流与自动化实践。持续更新。
-        </p>
+        <p class="tagline">AI 工具链、终端工作流与自动化实践。持续更新。</p>
         <ul class="links">
-          <li><a href="https://github.com/fan56/tech-blog" target="_blank" rel="noopener">GitHub</a></li>
+          <li>
+            <a
+              href="https://github.com/fan56/tech-blog"
+              target="_blank"
+              rel="noopener"
+              >GitHub</a
+            >
+          </li>
         </ul>
         <p class="foot">© 2026 · 单文件 HTML</p>
       </aside>
 
       <main class="posts">
         <article class="post reveal">
+          <div class="post-date">2026-08-22</div>
+          <div class="post-body">
+            <div class="post-cat">工具链</div>
+            <a class="post-title" href="dsh-tui-pi/"
+              >DSH-TUI-PI：让 dsh 在终端里住下来</a
+            >
+            <p class="post-desc">
+              DeepSeek Harness 的全功能 TUI：流式对话、powerline
+              底栏、think/tool/todo 面板、子代理双视图、主题热切换。
+              纯插件实现，零补丁；配套自研子代理注册中心与 DCP 确定性上下文压缩。
+            </p>
+          </div>
+        </article>
+        <article class="post reveal">
           <div class="post-date">2026-08-07</div>
           <div class="post-body">
             <div class="post-cat">工具链</div>
-            <a class="post-title" href="pi-topic-memory/">pi-topic-memory:让 pi coding agent 记得住当前在做什么</a>
+            <a class="post-title" href="pi-topic-memory/"
+              >pi-topic-memory:让 pi coding agent 记得住当前在做什么</a
+            >
             <p class="post-desc">
               一句话需求自动分类成 topic,只记结论不记过程,每轮对话前静默注入。
               双语产品页,含动画架构图与交互式终端演示。
@@ -262,8 +280,8 @@
             <div class="post-cat">工具链</div>
             <a class="post-title" href="pi/">Pi · 我的终端 AI 编排者</a>
             <p class="post-desc">
-              极简内核与 85 个技能、20 个智能体、4 个 MCP 的叠加。一张动画架构图讲清
-              pi 引擎、扩展层、Agent 团队与外部接入。
+              极简内核与 85 个技能、20 个智能体、4 个 MCP
+              的叠加。一张动画架构图讲清 pi 引擎、扩展层、Agent 团队与外部接入。
             </p>
           </div>
         </article>
@@ -271,7 +289,9 @@
           <div class="post-date">2026-07-23</div>
           <div class="post-body">
             <div class="post-cat">工具链</div>
-            <a class="post-title" href="pi-agent-intro/">Pi-agent 工具链:一条命令,从调研到上线</a>
+            <a class="post-title" href="pi-agent-intro/"
+              >Pi-agent 工具链:一条命令,从调研到上线</a
+            >
             <p class="post-desc">
               rpiv 当导演,lean-ctx 做地基,15 个 sub-agent 与 89 个 skill 干活,
               一条命令从调研到上线。
@@ -282,7 +302,9 @@
           <div class="post-date">2026-06-04</div>
           <div class="post-body">
             <div class="post-cat">工作流</div>
-            <a class="post-title" href="vibe-coding-with-omo/">Vibe Coding with OMO</a>
+            <a class="post-title" href="vibe-coding-with-omo/"
+              >Vibe Coding with OMO</a
+            >
             <p class="post-desc">
               Opencode + OhMyOpenAgent,从 Plan 到 E2E 部署的完整工作流。
             </p>
