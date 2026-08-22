@@ -1,0 +1,2681 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>语音数据分析助手 (Voice Data Agent) | 企业数据问答演示</title>
+    <meta
+      name="description"
+      content="面向 ADAS 领域专家的语音驱动数据分析助手：不会 SQL 也能动嘴查数、问知识库、生成图表。部署于企业内部网络，企业 SSO 鉴权。"
+    />
+    <link rel="icon" href="data:," />
+    <script>
+      /* 主题初始化：localStorage 优先，首访默认深色（不跟随系统）；必须在首帧前生效，避免闪烁 */
+      (function () {
+        try {
+          var t = localStorage.getItem("va-theme");
+          if (t !== "dark" && t !== "light") t = "dark";
+          document.documentElement.setAttribute("data-theme", t);
+        } catch (e) {
+          document.documentElement.setAttribute("data-theme", "dark");
+        }
+      })();
+    </script>
+    <style>
+      /* ============ 设计令牌（双主题） ============ */
+      :root {
+        color-scheme: dark;
+        --bg: #0b0e13;
+        --bg-2: #0f141b;
+        --surface: #10151d;
+        --surface-2: #151b25;
+        --line: rgba(150, 165, 185, 0.13);
+        --line-strong: rgba(150, 165, 185, 0.24);
+        --text: #e8edf4;
+        --text-2: #a5b1c0;
+        --text-3: #7f8b9c;
+        --accent: #2dd4bf;
+        --accent-2: #14b8a6;
+        --accent-soft: rgba(45, 212, 191, 0.1);
+        --accent-ink: #062622;
+        --amber: #f59e0b;
+        --amber-soft: rgba(245, 158, 11, 0.12);
+        --amber-ink: #2a1a04;
+        --chip-bg: rgba(150, 165, 185, 0.07);
+        --nav-bg: rgba(11, 14, 19, 0.78);
+        --particle: rgba(45, 212, 191, 0.5);
+        --glow-1: rgba(45, 212, 191, 0.07);
+        --focus: rgba(45, 212, 191, 0.55);
+        --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+        --radius-card: 14px;
+        --radius-btn: 10px;
+      }
+      :root[data-theme="light"] {
+        color-scheme: light;
+        --bg: #f6f8fa;
+        --bg-2: #eef2f6;
+        --surface: #ffffff;
+        --surface-2: #f2f5f8;
+        --line: rgba(23, 32, 43, 0.1);
+        --line-strong: rgba(23, 32, 43, 0.2);
+        --text: #182230;
+        --text-2: #46566a;
+        --text-3: #5f6d80;
+        --accent: #0f766e;
+        --accent-2: #0d9488;
+        --accent-soft: rgba(13, 148, 136, 0.09);
+        --accent-ink: #ffffff;
+        --amber: #b45309;
+        --amber-soft: rgba(180, 83, 9, 0.1);
+        --amber-ink: #ffffff;
+        --chip-bg: rgba(23, 32, 43, 0.05);
+        --nav-bg: rgba(246, 248, 250, 0.85);
+        --particle: rgba(15, 118, 110, 0.35);
+        --glow-1: rgba(13, 148, 136, 0.1);
+        --focus: rgba(15, 118, 110, 0.5);
+        --shadow: 0 24px 50px rgba(23, 32, 43, 0.1);
+      }
+      /* ============ 基础 ============ */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 84px;
+      }
+      body {
+        margin: 0;
+        font-family:
+          -apple-system, "SF Pro SC", "PingFang SC", "Microsoft YaHei",
+          "Segoe UI", sans-serif;
+        font-size: 16px;
+        line-height: 1.7;
+        color: var(--text);
+        background: var(--bg);
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        transition:
+          background-color 0.3s ease,
+          color 0.3s ease;
+      }
+      ::selection {
+        background: var(--accent-soft);
+        color: var(--text);
+      }
+      :focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 2px;
+        border-radius: 4px;
+      }
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      p {
+        margin: 0;
+      }
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+        line-height: 1.25;
+      }
+      code {
+        font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        font-size: 0.92em;
+        background: var(--chip-bg);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 1px 7px;
+        color: var(--accent);
+        font-variant-numeric: tabular-nums;
+      }
+      .num,
+      .stat-num {
+        font-variant-numeric: tabular-nums;
+      }
+
+      .container {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 0 clamp(20px, 4vw, 40px);
+      }
+      .section {
+        padding: clamp(72px, 9vw, 108px) 0;
+      }
+      .section + .section {
+        padding-top: 0;
+      }
+
+      /* 分段标题（eyebrow 全页仅 3 处：能力矩阵 / 六层架构 / 路线图） */
+      .eyebrow {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 12px;
+      }
+      .section h2 {
+        font-size: clamp(23px, 2.6vw, 31px);
+      }
+      .lead {
+        margin-top: 14px;
+        max-width: 64ch;
+        font-size: 17px;
+        color: var(--text-2);
+      }
+
+      /* 按钮 */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 0;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 600;
+        font-size: 15px;
+        border-radius: var(--radius-btn);
+        padding: 12px 22px;
+        transition:
+          transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+          background-color 0.18s ease,
+          border-color 0.18s ease,
+          color 0.18s ease;
+        white-space: nowrap;
+      }
+      .btn svg {
+        flex: none;
+      }
+      .btn:active {
+        transform: scale(0.98);
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: var(--accent-ink);
+      }
+      .btn-primary:hover {
+        transform: translateY(-1px);
+        background: var(--accent-2);
+        text-decoration: none;
+      }
+      .btn-ghost {
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--line-strong);
+      }
+      .btn-ghost:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        transform: translateY(-1px);
+        text-decoration: none;
+      }
+
+      /* 能力卡 / 场景卡通用浮现 */
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-card);
+      }
+
+      /* ============ 导航 ============ */
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        background: var(--nav-bg);
+        -webkit-backdrop-filter: blur(14px);
+        backdrop-filter: blur(14px);
+        border-bottom: 1px solid var(--line);
+        transition: background-color 0.3s ease;
+      }
+      .nav-inner {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 0 clamp(20px, 4vw, 40px);
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 650;
+        font-size: 15px;
+        color: var(--text);
+        letter-spacing: -0.01em;
+      }
+      .brand svg {
+        color: var(--accent);
+      }
+      .brand small {
+        font-weight: 400;
+        color: var(--text-3);
+        font-size: 13px;
+        margin-left: 2px;
+      }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 26px;
+      }
+      .nav-links a {
+        color: var(--text-2);
+        font-size: 14px;
+        text-decoration: none;
+        transition: color 0.15s ease;
+      }
+      .nav-links a:hover {
+        color: var(--text);
+      }
+      .theme-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        border: 1px solid var(--line-strong);
+        background: transparent;
+        color: var(--text-2);
+        cursor: pointer;
+        transition:
+          color 0.15s ease,
+          border-color 0.15s ease,
+          transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .theme-toggle:hover {
+        color: var(--accent);
+        border-color: var(--accent);
+        transform: translateY(-1px);
+      }
+      .theme-toggle:active {
+        transform: scale(0.96);
+      }
+      .theme-toggle .ic-sun {
+        display: none;
+      }
+      :root[data-theme="light"] .theme-toggle .ic-sun {
+        display: block;
+      }
+      :root[data-theme="light"] .theme-toggle .ic-moon {
+        display: none;
+      }
+
+      /* ============ Hero ============ */
+      .hero {
+        position: relative;
+        min-height: calc(100dvh - 60px);
+        display: flex;
+        align-items: center;
+        padding: 88px 0 72px;
+        overflow: hidden;
+      }
+      .hero-canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+      }
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background:
+          radial-gradient(60% 52% at 78% 22%, var(--glow-1), transparent 70%),
+          radial-gradient(
+            40% 40% at 12% 88%,
+            rgba(45, 212, 191, 0.035),
+            transparent 70%
+          );
+        pointer-events: none;
+      }
+      .hero-inner {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: 1.04fr 0.96fr;
+        gap: clamp(32px, 4.5vw, 64px);
+        align-items: center;
+        width: 100%;
+      }
+      .hero h1 {
+        font-size: clamp(30px, 4.3vw, 46px);
+        line-height: 1.16;
+        letter-spacing: -0.02em;
+        max-width: 13ch;
+      }
+      .hero h1 .hl {
+        color: var(--accent);
+      }
+      .hero-sub {
+        margin-top: 18px;
+        font-size: 17px;
+        color: var(--text-2);
+        max-width: 46ch;
+      }
+      .hero-cta {
+        display: flex;
+        gap: 14px;
+        margin-top: 30px;
+        flex-wrap: wrap;
+      }
+
+      /* Hero 演示面板 */
+      .demo {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        max-width: 480px;
+        width: 100%;
+        margin-left: auto;
+      }
+      .demo-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 13px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+      .orb {
+        position: relative;
+        width: 26px;
+        height: 26px;
+        flex: none;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle at 34% 30%,
+          var(--accent),
+          var(--accent-2) 72%
+        );
+      }
+      .orb i {
+        position: absolute;
+        inset: -5px;
+        border-radius: 50%;
+        border: 1px solid var(--accent);
+        opacity: 0;
+      }
+      .orb.active i {
+        animation: orbRing 1.8s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+      }
+      .orb.active i:nth-child(2) {
+        animation-delay: 0.9s;
+      }
+      @keyframes orbRing {
+        0% {
+          transform: scale(0.7);
+          opacity: 0.7;
+        }
+        100% {
+          transform: scale(1.5);
+          opacity: 0;
+        }
+      }
+      .demo-title {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.25;
+      }
+      .demo-title strong {
+        font-size: 14px;
+        font-weight: 650;
+      }
+      .demo-title span {
+        font-size: 11.5px;
+        color: var(--text-3);
+      }
+      .demo-tag {
+        margin-left: auto;
+        font-size: 11px;
+        color: var(--text-3);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 2px 9px;
+        white-space: nowrap;
+      }
+      .demo-status {
+        font-size: 12px;
+        color: var(--accent);
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+      .demo-body {
+        padding: 18px 16px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-height: 340px;
+      }
+      .msg {
+        opacity: 0;
+        transform: translateY(10px);
+        transition:
+          opacity 0.4s ease,
+          transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .msg.show {
+        opacity: 1;
+        transform: none;
+      }
+      .msg.out {
+        opacity: 0;
+        transform: translateY(-6px);
+        transition-duration: 0.25s;
+      }
+      .msg-meta {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .msg-role {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-2);
+      }
+      .msg-tool {
+        font-size: 11px;
+        color: var(--text-3);
+      }
+      .msg-user .msg-bubble {
+        background: var(--accent-soft);
+        border: 1px solid rgba(45, 212, 191, 0.22);
+      }
+      .msg-agent .msg-bubble {
+        background: var(--surface-2);
+        border: 1px solid var(--line);
+      }
+      .msg-bubble {
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      .msg-user {
+        align-self: flex-end;
+        max-width: 92%;
+      }
+      .msg-agent {
+        align-self: flex-start;
+        max-width: 100%;
+        width: 100%;
+      }
+      .wave {
+        display: inline-flex;
+        align-items: center;
+        gap: 2.5px;
+        height: 16px;
+        margin-right: 8px;
+        vertical-align: middle;
+      }
+      .wave i {
+        width: 2.5px;
+        height: 6px;
+        border-radius: 2px;
+        background: var(--accent);
+        transform: scaleY(0.55);
+        transition: transform 0.2s ease;
+      }
+      .wave.on i {
+        animation: waveBar 0.9s ease-in-out infinite;
+      }
+      .wave.on i:nth-child(2) {
+        animation-delay: 0.12s;
+      }
+      .wave.on i:nth-child(3) {
+        animation-delay: 0.24s;
+      }
+      .wave.on i:nth-child(4) {
+        animation-delay: 0.36s;
+      }
+      .wave.on i:nth-child(5) {
+        animation-delay: 0.48s;
+      }
+      @keyframes waveBar {
+        0%,
+        100% {
+          transform: scaleY(0.5);
+        }
+        50% {
+          transform: scaleY(1);
+        }
+      }
+      .dots {
+        display: inline-flex;
+        gap: 4px;
+        align-items: center;
+        height: 16px;
+      }
+      .dots i {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--text-3);
+        animation: dotBlink 1.2s ease-in-out infinite;
+      }
+      .dots i:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .dots i:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+      @keyframes dotBlink {
+        0%,
+        100% {
+          opacity: 0.3;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+      .toolchip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 9px;
+        font-size: 12px;
+        color: var(--text-2);
+        background: var(--chip-bg);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 3px 11px;
+        font-variant-numeric: tabular-nums;
+        opacity: 0;
+        transform: translateY(4px);
+        transition:
+          opacity 0.3s ease,
+          transform 0.3s ease;
+      }
+      .toolchip.show {
+        opacity: 1;
+        transform: none;
+      }
+      .toolchip.done {
+        color: var(--accent);
+        border-color: rgba(45, 212, 191, 0.3);
+      }
+      :root[data-theme="light"] .toolchip.done {
+        border-color: rgba(13, 148, 136, 0.35);
+      }
+      .toolchip svg {
+        color: var(--accent);
+      }
+      .mini-chart {
+        margin: 2px 0 8px;
+      }
+      .mini-chart svg {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+      .mini-chart rect {
+        transform-box: fill-box;
+        transform-origin: bottom;
+        transform: scaleY(0);
+        transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .msg.show .mini-chart rect {
+        transform: scaleY(1);
+      }
+      .mini-chart .bar {
+        fill: var(--accent);
+        opacity: 0.85;
+      }
+      .mini-chart .bar.peak {
+        fill: var(--amber);
+        opacity: 1;
+      }
+      .mini-chart text {
+        fill: var(--text-3);
+        font-size: 9px;
+        font-family: inherit;
+      }
+      .ans-text {
+        margin-top: 2px;
+        color: var(--text-2);
+        font-size: 13.5px;
+      }
+      .tts-note {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: 8px;
+        font-size: 11.5px;
+        color: var(--text-3);
+      }
+      .tts-note i {
+        display: block;
+        width: 3px;
+        height: 8px;
+        border-radius: 2px;
+        background: var(--accent);
+        animation: waveBar 0.8s ease-in-out infinite;
+      }
+      .tts-note i:nth-child(2) {
+        animation-delay: 0.15s;
+        height: 11px;
+      }
+      .tts-note i:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+      .demo-input {
+        margin: 10px 16px 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid var(--line-strong);
+        border-radius: 999px;
+        padding: 10px 16px;
+        color: var(--text-3);
+        font-size: 13px;
+      }
+      .demo-input svg {
+        color: var(--text-3);
+      }
+      .demo-input .mic-ic {
+        margin-left: auto;
+        color: var(--accent);
+      }
+
+      /* ============ 痛点 → 方案 ============ */
+      .ps-grid {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: clamp(20px, 3.5vw, 44px);
+        align-items: stretch;
+        margin-top: 44px;
+      }
+      .ps-col {
+        border-radius: var(--radius-card);
+        padding: clamp(24px, 3vw, 36px);
+      }
+      .ps-before {
+        background: transparent;
+        border: 1px solid var(--line);
+      }
+      .ps-after {
+        background: var(--accent-soft);
+        border: 1px solid rgba(45, 212, 191, 0.24);
+      }
+      :root[data-theme="light"] .ps-after {
+        border-color: rgba(13, 148, 136, 0.3);
+      }
+      .ps-col h3 {
+        font-size: 17px;
+        margin-bottom: 18px;
+      }
+      .ps-after h3 {
+        color: var(--accent);
+      }
+      .ps-col ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .ps-col li {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        font-size: 15px;
+        color: var(--text-2);
+        line-height: 1.65;
+      }
+      .ps-col li svg {
+        flex: none;
+        margin-top: 4px;
+      }
+      .ps-before li svg {
+        color: var(--text-3);
+      }
+      .ps-after li svg {
+        color: var(--accent);
+      }
+      .ps-mid {
+        display: flex;
+        align-items: center;
+      }
+      .ps-mid svg {
+        color: var(--accent);
+        width: 30px;
+        height: 30px;
+      }
+      .ps-note {
+        margin-top: 22px;
+        font-size: 13.5px;
+        color: var(--text-3);
+      }
+
+      /* ============ 能力矩阵 ============ */
+      .cap-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+        margin-top: 40px;
+      }
+      .cap {
+        padding: 24px 24px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        transition:
+          border-color 0.2s ease,
+          transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .cap:hover {
+        border-color: var(--line-strong);
+        transform: translateY(-2px);
+      }
+      .cap-top {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+      }
+      .cap-top svg {
+        color: var(--accent);
+        flex: none;
+      }
+      .cap-top h3 {
+        font-size: 16.5px;
+      }
+      .cap p {
+        font-size: 14px;
+        color: var(--text-2);
+        line-height: 1.65;
+      }
+      .cap-q {
+        margin-top: auto;
+        font-size: 13px;
+        color: var(--text-2);
+        background: var(--chip-bg);
+        border-radius: 8px;
+        padding: 9px 12px;
+        line-height: 1.55;
+      }
+      .cap-q b {
+        color: var(--text);
+        font-weight: 600;
+      }
+      .cap-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .tag {
+        font-size: 11.5px;
+        color: var(--text-2);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 2px 9px;
+        background: transparent;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.01em;
+      }
+
+      /* ============ 数据规模 ============ */
+      .stats-band {
+        margin-top: 44px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-card);
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+      }
+      .stat {
+        padding: 34px 22px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 2px;
+      }
+      .stat + .stat {
+        border-left: 1px solid var(--line);
+      }
+      .stat-num {
+        font-size: clamp(27px, 3vw, 38px);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--text);
+        line-height: 1.1;
+      }
+      .stat-unit {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--accent);
+        margin-top: 4px;
+      }
+      .stat-label {
+        font-size: 13px;
+        color: var(--text-3);
+        margin-top: 8px;
+      }
+
+      /* ============ 使用场景 ============ */
+      .scn-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+        margin-top: 40px;
+      }
+      .scn {
+        padding: 26px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .scn > h3 {
+        font-size: 17px;
+        margin-bottom: 14px;
+      }
+      .scn-step {
+        display: flex;
+        gap: 12px;
+        padding: 10px 0 12px;
+        position: relative;
+      }
+      .scn-step + .scn-step::before {
+        content: "";
+        position: absolute;
+        left: 12px;
+        top: 0;
+        width: 1px;
+        height: 14px;
+        background: var(--line-strong);
+      }
+      .scn-tag {
+        flex: none;
+        width: 25px;
+        height: 25px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12.5px;
+        font-weight: 650;
+        margin-top: 2px;
+      }
+      .scn-ask .scn-tag {
+        background: var(--chip-bg);
+        border: 1px solid var(--line);
+        color: var(--text-2);
+      }
+      .scn-do .scn-tag {
+        background: var(--accent-soft);
+        border: 1px solid rgba(45, 212, 191, 0.3);
+        color: var(--accent);
+      }
+      :root[data-theme="light"] .scn-do .scn-tag {
+        border-color: rgba(13, 148, 136, 0.35);
+      }
+      .scn-get .scn-tag {
+        background: var(--amber-soft);
+        border: 1px solid rgba(245, 158, 11, 0.32);
+        color: var(--amber);
+      }
+      :root[data-theme="light"] .scn-get .scn-tag {
+        border-color: rgba(180, 83, 9, 0.35);
+      }
+      .scn-step p {
+        font-size: 13.5px;
+        color: var(--text-2);
+        line-height: 1.6;
+      }
+      .scn-step .q {
+        color: var(--text);
+      }
+      .scn-step b {
+        color: var(--text);
+        font-weight: 600;
+      }
+      .scn-foot {
+        margin-top: 14px;
+        padding-top: 13px;
+        border-top: 1px solid var(--line);
+        font-size: 12.5px;
+        color: var(--text-3);
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ============ 架构图 ============ */
+      .arch {
+        margin-top: 44px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-card);
+        background: var(--surface);
+        padding: clamp(14px, 2.5vw, 26px);
+      }
+      .arch-layer {
+        display: grid;
+        grid-template-columns: 40px 118px 1fr;
+        gap: 14px;
+        align-items: center;
+        min-height: 66px;
+      }
+      .arch-layer + .arch-layer {
+        border-top: 1px dashed var(--line);
+      }
+      .arch-rail {
+        position: relative;
+        align-self: stretch;
+        display: flex;
+        justify-content: center;
+      }
+      .rail-line {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: var(--line-strong);
+      }
+      .rail-node {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--surface);
+        border: 2px solid var(--accent);
+        z-index: 1;
+      }
+      .rail-pulse {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background-image: linear-gradient(
+          to bottom,
+          transparent 0%,
+          var(--accent) 50%,
+          transparent 100%
+        );
+        background-size: 3px 28px;
+        background-repeat: no-repeat;
+        background-position: 0 -30px;
+        animation: railPulse 2.6s cubic-bezier(0.45, 0, 0.35, 1) infinite;
+        opacity: 0;
+      }
+      .arch-layer:nth-child(2) .rail-pulse {
+        animation-delay: 0.3s;
+      }
+      .arch-layer:nth-child(3) .rail-pulse {
+        animation-delay: 0.6s;
+      }
+      .arch-layer:nth-child(4) .rail-pulse {
+        animation-delay: 0.9s;
+      }
+      .arch-layer:nth-child(5) .rail-pulse {
+        animation-delay: 1.2s;
+      }
+      .arch-layer:nth-child(6) .rail-pulse {
+        animation-delay: 1.5s;
+      }
+      @keyframes railPulse {
+        0% {
+          background-position: 0 -30px;
+          opacity: 0;
+        }
+        10% {
+          opacity: 1;
+        }
+        88% {
+          opacity: 1;
+        }
+        100% {
+          background-position: 0 100%;
+          opacity: 0;
+        }
+      }
+      .arch-label h3 {
+        font-size: 15px;
+      }
+      .arch-label span {
+        display: block;
+        font-size: 11.5px;
+        color: var(--text-3);
+        margin-top: 1px;
+      }
+      .arch-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 10px 0;
+      }
+      .chip {
+        font-size: 13px;
+        color: var(--text-2);
+        background: var(--chip-bg);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 6px 12px;
+        line-height: 1.4;
+        font-variant-numeric: tabular-nums;
+      }
+      .chip b {
+        color: var(--text);
+        font-weight: 600;
+      }
+      .arch-note {
+        margin-top: 20px;
+        font-size: 13px;
+        color: var(--text-3);
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ============ 路线图 ============ */
+      .tl {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+        margin-top: 48px;
+        position: relative;
+      }
+      .tl::before {
+        content: "";
+        position: absolute;
+        top: 13px;
+        left: calc(16.66% + 9px);
+        right: calc(16.66% + 9px);
+        height: 1px;
+        background: var(--line-strong);
+      }
+      .tl-item {
+        position: relative;
+        padding-top: 38px;
+      }
+      .tl-dot {
+        position: absolute;
+        top: 6px;
+        left: 0;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        background: var(--surface);
+        border: 2.5px solid var(--line-strong);
+        z-index: 1;
+      }
+      .tl-item.tl-now .tl-dot {
+        border-color: var(--amber);
+      }
+      .tl-item.tl-now .tl-dot::after {
+        content: "";
+        position: absolute;
+        inset: -7px;
+        border-radius: 50%;
+        border: 1px solid var(--amber);
+        animation: orbRing 2.2s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+      }
+      .tl-tag {
+        position: absolute;
+        top: -10px;
+        left: 24px;
+        font-size: 11.5px;
+        font-weight: 650;
+        color: var(--amber-ink);
+        background: var(--amber);
+        border-radius: 999px;
+        padding: 2px 10px;
+        letter-spacing: 0.04em;
+        white-space: nowrap; /* 修复：容器宽度不足时 CJK 竖排（当/前 换行） */
+        min-width: max-content;
+      }
+      .tl-item h3 {
+        font-size: 16.5px;
+        margin-bottom: 8px;
+      }
+      .tl-item p {
+        font-size: 14px;
+        color: var(--text-2);
+        line-height: 1.65;
+      }
+      .tl-ext {
+        margin-top: 40px;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding-top: 22px;
+        border-top: 1px solid var(--line);
+      }
+      .tl-ext-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-2);
+        margin-right: 4px;
+      }
+      .tl-ext .chip b {
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ============ Footer ============ */
+      .footer {
+        border-top: 1px solid var(--line);
+        background: var(--bg-2);
+        padding: 64px 0 36px;
+      }
+      .sec-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+      }
+      .sec-item {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 18px 18px 16px;
+        border-radius: var(--radius-card);
+        border: 1px solid var(--line);
+        background: var(--surface);
+      }
+      .sec-item svg {
+        color: var(--accent);
+      }
+      .sec-item strong {
+        font-size: 14px;
+        font-weight: 650;
+      }
+      .sec-item span {
+        font-size: 12.5px;
+        color: var(--text-3);
+        line-height: 1.55;
+      }
+      .access {
+        margin-top: 26px;
+        font-size: 14px;
+        color: var(--text-2);
+        background: var(--chip-bg);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-card);
+        padding: 16px 20px;
+      }
+      .access strong {
+        color: var(--text);
+        font-weight: 650;
+      }
+
+      /* ============ 滚动渐入 ============ */
+      .reveal {
+        opacity: 0;
+        transform: translateY(18px);
+        transition:
+          opacity 0.65s ease,
+          transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+        transition-delay: var(--d, 0s);
+      }
+      .reveal.in {
+        opacity: 1;
+        transform: none;
+      }
+
+      /* ============ 响应式 ============ */
+      @media (max-width: 960px) {
+        .cap-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .scn-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .scn-grid .scn:last-child {
+          grid-column: 1 / -1;
+        }
+        .stats-band {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        .stat:nth-child(4) {
+          border-left: 0;
+        }
+        .stat:nth-child(n + 4) {
+          border-top: 1px solid var(--line);
+        }
+        .stat:nth-child(4),
+        .stat:nth-child(5) {
+          grid-column: span 1;
+        }
+        .tl {
+          grid-template-columns: 1fr;
+          gap: 0;
+        }
+        .tl::before {
+          display: none;
+        }
+        .tl-item {
+          padding: 0 0 30px 34px;
+        }
+        .tl-dot {
+          left: 0;
+        }
+        .tl-item:not(:last-child)::after {
+          content: "";
+          position: absolute;
+          left: 7px;
+          top: 13px;
+          bottom: -30px;
+          width: 1px;
+          background: var(--line-strong);
+        }
+      }
+      @media (max-width: 860px) {
+        .rail-pulse {
+          display: none;
+        }
+      }
+      @media (max-width: 768px) {
+        .hero {
+          padding: 64px 0 56px;
+        }
+        .hero-inner {
+          grid-template-columns: 1fr;
+          gap: 40px;
+        }
+        .demo {
+          margin: 0 auto;
+        }
+        .ps-grid {
+          grid-template-columns: 1fr;
+        }
+        .ps-mid {
+          transform: rotate(90deg);
+          justify-content: center;
+          padding: 6px 0;
+        }
+        .cap-grid {
+          grid-template-columns: 1fr;
+        }
+        .scn-grid {
+          grid-template-columns: 1fr;
+        }
+        .scn-grid .scn:last-child {
+          grid-column: auto;
+        }
+        .stats-band {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .stat:nth-child(3) {
+          border-left: 0;
+        }
+        .stat:nth-child(n + 3) {
+          border-top: 1px solid var(--line);
+        }
+        .stat:last-child {
+          grid-column: 1 / -1;
+          border-left: 0;
+        }
+        .arch-layer {
+          grid-template-columns: 28px 1fr;
+          gap: 10px;
+          padding: 4px 0;
+        }
+        .arch-label {
+          padding-top: 10px;
+        }
+        .sec-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .nav-links {
+          display: none;
+        }
+      }
+
+      /* ============ 无障碍：减少动效 ============ */
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+        .reveal {
+          opacity: 1;
+          transform: none;
+        }
+        .orb i,
+        .rail-pulse,
+        .tl-item.tl-now .tl-dot::after {
+          display: none;
+        }
+        .wave i,
+        .dots i,
+        .tts-note i {
+          animation: none !important;
+        }
+      }
+      @media (prefers-reduced-transparency: reduce) {
+        .nav {
+          background: var(--bg);
+          -webkit-backdrop-filter: none;
+          backdrop-filter: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ============ 导航 ============ -->
+    <header class="nav">
+      <div class="nav-inner">
+        <a
+          class="brand"
+          href="#top"
+          aria-label="语音数据分析助手 Voice Data Agent"
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="M9 8.5v7M12 6.5v11M15 8.5v7" />
+          </svg>
+          语音数据分析助手<small>Voice Data Agent</small>
+        </a>
+        <nav class="nav-links" aria-label="页面导航">
+          <a href="#capabilities">能力</a>
+          <a href="#scenarios">场景</a>
+          <a href="#architecture">架构</a>
+          <a href="#roadmap">路线</a>
+          <button
+            class="theme-toggle"
+            id="themeToggle"
+            type="button"
+            aria-label="切换深浅主题"
+          >
+            <svg
+              class="ic-moon"
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M20 13.5A8.5 8.5 0 0 1 10.5 4 8.5 8.5 0 1 0 20 13.5z" />
+            </svg>
+            <svg
+              class="ic-sun"
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="4" />
+              <path
+                d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"
+              />
+            </svg>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main id="top">
+      <!-- ============ 1. Hero ============ -->
+      <section class="hero" id="hero">
+        <canvas class="hero-canvas" id="heroCanvas" aria-hidden="true"></canvas>
+        <div class="container hero-inner">
+          <div>
+            <h1 class="reveal">
+              会说话，<br />就会做<span class="hl">数据分析</span>
+            </h1>
+            <p class="hero-sub reveal" style="--d: 0.08s">
+              语音数据分析助手面向 ADAS 领域专家：不会
+              SQL、不会写代码，动嘴就能查数据库、问知识库、生成图表，回答可核验。
+            </p>
+            <div class="hero-cta reveal" style="--d: 0.16s">
+              <a class="btn btn-primary" href="#capabilities">
+                查看能力矩阵
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M4 12h15M13 5l7 7-7 7" />
+                </svg>
+              </a>
+              <a class="btn btn-ghost" href="#architecture">架构一览</a>
+            </div>
+          </div>
+
+          <!-- 对话演示面板：模拟一轮 语音提问 → 转写 → 工具调用 → 图表结论 -->
+          <div
+            class="demo reveal"
+            style="--d: 0.2s"
+            aria-label="语音问答演示（自动播放）"
+          >
+            <div class="demo-head">
+              <div class="orb" id="orb" aria-hidden="true"><i></i><i></i></div>
+              <div class="demo-title">
+                <strong>Voice Data Agent</strong>
+                <span>语音数据分析助手</span>
+              </div>
+              <span class="demo-tag">演示 · 自动播放</span>
+              <span class="demo-status" id="demoStatus">就绪</span>
+            </div>
+            <div class="demo-body" id="demoBody">
+              <div class="msg msg-user" id="msgQ">
+                <div class="msg-meta">
+                  <span class="msg-role">ADAS 专家</span
+                  ><span class="msg-tool">语音提问</span>
+                </div>
+                <div class="msg-bubble">
+                  <span class="wave" id="waveQ" aria-hidden="true"
+                    ><i></i><i></i><i></i><i></i><i></i
+                  ></span>
+                  <span class="typing" id="typeQ"
+                    >上周早高峰摩擦数据量多少</span
+                  >
+                </div>
+              </div>
+              <div class="msg msg-agent" id="msgThink">
+                <div class="msg-meta">
+                  <span class="msg-role">数据助手</span
+                  ><span class="msg-tool" id="thinkLabel">思考中</span>
+                </div>
+                <div class="msg-bubble">
+                  <span class="dots" aria-hidden="true"
+                    ><i></i><i></i><i></i
+                  ></span>
+                  <div class="toolchip" id="chipTool">
+                    <svg
+                      width="13"
+                      height="13"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.6"
+                      stroke-linecap="round"
+                      aria-hidden="true"
+                    >
+                      <ellipse cx="12" cy="5" rx="7.5" ry="2.8" />
+                      <path
+                        d="M4.5 5v14c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V5M4.5 12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8"
+                      />
+                    </svg>
+                    <span id="chipText">MCP · 数据仓库 psql 只读查询</span>
+                  </div>
+                </div>
+              </div>
+              <div class="msg msg-agent" id="msgAns">
+                <div class="msg-meta">
+                  <span class="msg-role">数据助手</span
+                  ><span class="msg-tool">回答</span>
+                </div>
+                <div class="msg-bubble">
+                  <div class="mini-chart" aria-hidden="true">
+                    <svg viewBox="0 0 264 112">
+                      <rect
+                        class="bar"
+                        x="6"
+                        y="34"
+                        width="30"
+                        height="74"
+                        rx="4"
+                        style="transition-delay: 0.08s"
+                      />
+                      <rect
+                        class="bar"
+                        x="42"
+                        y="40"
+                        width="30"
+                        height="68"
+                        rx="4"
+                        style="transition-delay: 0.16s"
+                      />
+                      <rect
+                        class="bar peak"
+                        x="78"
+                        y="26"
+                        width="30"
+                        height="82"
+                        rx="4"
+                        style="transition-delay: 0.24s"
+                      />
+                      <rect
+                        class="bar"
+                        x="114"
+                        y="32"
+                        width="30"
+                        height="76"
+                        rx="4"
+                        style="transition-delay: 0.32s"
+                      />
+                      <rect
+                        class="bar"
+                        x="150"
+                        y="30"
+                        width="30"
+                        height="78"
+                        rx="4"
+                        style="transition-delay: 0.4s"
+                      />
+                      <rect
+                        class="bar"
+                        x="186"
+                        y="62"
+                        width="30"
+                        height="46"
+                        rx="4"
+                        style="transition-delay: 0.48s"
+                      />
+                      <rect
+                        class="bar"
+                        x="222"
+                        y="66"
+                        width="30"
+                        height="42"
+                        rx="4"
+                        style="transition-delay: 0.56s"
+                      />
+                      <text x="21" y="104">一</text>
+                      <text x="57" y="104">二</text>
+                      <text x="93" y="104">三</text>
+                      <text x="129" y="104">四</text>
+                      <text x="165" y="104">五</text>
+                      <text x="201" y="104">六</text>
+                      <text x="237" y="104">日</text>
+                    </svg>
+                  </div>
+                  <p class="ans-text">
+                    早高峰（07:00-09:00）摩擦数据量工作日平稳，峰值在周三，周末回落。需要按城市拆分看看吗？
+                  </p>
+                  <span class="tts-note" aria-hidden="true"
+                    ><i></i><i></i><i></i>TTS 播报中</span
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="demo-input" aria-hidden="true">
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"
+                />
+                <path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v3" />
+              </svg>
+              <span>按住说话，或直接打字提问</span>
+              <svg
+                class="mic-ic"
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"
+                />
+                <path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v3" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 2. 痛点 → 方案 ============ -->
+      <section class="section" id="pain">
+        <div class="container">
+          <h2 class="reveal">从「等别人跑数」到「动嘴就出数」</h2>
+          <p class="lead reveal" style="--d: 0.08s">
+            数据团队不缺，缺的是专家自己随时能看数。语音数据分析助手
+            把数据库、知识库、编码能力收进一次对话。
+          </p>
+          <div class="ps-grid">
+            <div class="ps-col ps-before reveal" style="--d: 0.1s">
+              <h3>以前：专家的三个坎</h3>
+              <ul>
+                <li>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                  <span
+                    >不会
+                    SQL：查数只能排队等数据团队，一个需求来回数小时，甚至隔天。</span
+                  >
+                </li>
+                <li>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                  <span
+                    >知识分散：服务架构、监控指标、已知问题散落在文档和群聊里，找起来靠人脉。</span
+                  >
+                </li>
+                <li>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                  <span
+                    >分析门槛：拿到数据还要写代码做聚合、画图，才能形成结论。</span
+                  >
+                </li>
+              </ul>
+            </div>
+            <div class="ps-mid reveal" style="--d: 0.18s" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M4 12h15M13 5l7 7-7 7" />
+              </svg>
+            </div>
+            <div class="ps-col ps-after reveal" style="--d: 0.26s">
+              <h3>现在：动嘴就行</h3>
+              <ul>
+                <li>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span
+                    >动嘴提问：MiMo ASR 转写，自然语言直达数据库，不用写一行
+                    SQL。</span
+                  >
+                </li>
+                <li>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span
+                    >真实可核验：Agent
+                    生成的查询与结论可查证，数据来自生产库只读访问。</span
+                  >
+                </li>
+                <li>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span
+                    >图表直出：柱状图、流程图、表格当场生成，结论和证据一起给。</span
+                  >
+                </li>
+              </ul>
+            </div>
+          </div>
+          <p class="ps-note reveal" style="--d: 0.34s">
+            底层是一套真实运行的 Agent：LLM 推理 + MCP 工具链，部署在内部云平台
+            (Kubernetes) 内网。
+          </p>
+        </div>
+      </section>
+
+      <!-- ============ 3. 能力矩阵 ============ -->
+      <section class="section" id="capabilities">
+        <div class="container">
+          <span class="eyebrow reveal">能力矩阵</span>
+          <h2 class="reveal">六种能力，一条链路</h2>
+          <p class="lead reveal" style="--d: 0.08s">
+            从提问到图表，每个环节都有真实组件支撑。示例问题可以直接照抄着问。
+          </p>
+          <div class="cap-grid">
+            <article class="cap card reveal" style="--d: 0.04s">
+              <div class="cap-top">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"
+                  />
+                  <path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v3" />
+                </svg>
+                <h3>语音问答</h3>
+              </div>
+              <p>
+                MiMo ASR 转写 + TTS 朗读。动嘴说一句，Agent
+                听音作答，结论还能读给你听。
+              </p>
+              <div class="cap-q">
+                <b>「</b>上周早高峰摩擦数据量多少<b>」</b>
+              </div>
+              <div class="cap-tags">
+                <span class="tag">MiMo ASR</span
+                ><span class="tag">MiMo TTS</span>
+              </div>
+            </article>
+
+            <article class="cap card reveal" style="--d: 0.1s">
+              <div class="cap-top">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.6 0-3.1-.4-4.4-1.2L3 20l1.2-5.1A8.5 8.5 0 1 1 21 11.5z"
+                  />
+                  <path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01" />
+                </svg>
+                <h3>文字问答</h3>
+              </div>
+              <p>
+                不想开口就打字。Agent 边想边答，追问、改口径、换时间范围都行。
+              </p>
+              <div class="cap-q">
+                <b>「</b>昨天各城市地图匹配成功率怎么样<b>」</b>
+              </div>
+              <div class="cap-tags"><span class="tag">Agent 推理</span></div>
+            </article>
+
+            <article class="cap card reveal" style="--d: 0.16s">
+              <div class="cap-top">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <ellipse cx="12" cy="5" rx="8" ry="3" />
+                  <path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5" />
+                  <path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" />
+                </svg>
+                <h3>数据仓库直连查询</h3>
+              </div>
+              <p>
+                只读 psql 直连 PostgreSQL，7,300 万行车辆摩擦数据
+                随时可问，无需提工单。
+              </p>
+              <div class="cap-q">
+                <b>「</b>上海最近 7 天地图匹配成功率<b>」</b>
+              </div>
+              <div class="cap-tags">
+                <span class="tag">MCP · psql 只读</span>
+              </div>
+            </article>
+
+            <article class="cap card reveal" style="--d: 0.04s">
+              <div class="cap-top">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                  <path
+                    d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+                  />
+                </svg>
+                <h3>知识库问答 (RAG)</h3>
+              </div>
+              <p>319 篇服务技术文档全文检索，架构问题直接给答案和出处。</p>
+              <div class="cap-q">
+                <b>「</b>地图匹配服务架构怎么设计的<b>」</b>
+              </div>
+              <div class="cap-tags">
+                <span class="tag">MCP · 知识库检索</span>
+              </div>
+            </article>
+
+            <article class="cap card reveal" style="--d: 0.1s">
+              <div class="cap-top">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="M20 20l-3.5-3.5" />
+                  <path d="M8.5 11h5M11 8.5v5" />
+                </svg>
+                <h3>anysearch 搜索</h3>
+              </div>
+              <p>
+                联网搜索公开资料，把服务已知问题、行业动态带进对话，内网外网信息并排给。
+              </p>
+              <div class="cap-q">
+                <b>「</b>这个服务最近有公开的已知问题吗<b>」</b>
+              </div>
+              <div class="cap-tags">
+                <span class="tag">MCP · anysearch</span>
+              </div>
+            </article>
+
+            <article class="cap card reveal" style="--d: 0.16s">
+              <div class="cap-top">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M4 20v-9M10 20V4M16 20v-7M3 20h18" />
+                </svg>
+                <h3>图表 / 表格生成</h3>
+              </div>
+              <p>
+                echarts 柱状图、mermaid
+                流程图、数据表格，结论配图一起渲染在对话流里。
+              </p>
+              <div class="cap-q">
+                <b>「</b>把各路况事件类型数量画成柱状图<b>」</b>
+              </div>
+              <div class="cap-tags">
+                <span class="tag">echarts</span><span class="tag">mermaid</span
+                ><span class="tag">表格</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 4. 数据规模 ============ -->
+      <section class="section" id="stats">
+        <div class="container">
+          <h2 class="reveal">跑在真实数据上</h2>
+          <p class="lead reveal" style="--d: 0.08s">
+            不是演示数据：直接只读访问内部数据仓库与 知识库，问多少查多少。
+          </p>
+          <div class="stats-band reveal" style="--d: 0.14s">
+            <div class="stat">
+              <span class="stat-num" data-count="7306">7,306</span>
+              <span class="stat-unit">万行</span>
+              <span class="stat-label">车辆摩擦数据表</span>
+            </div>
+            <div class="stat">
+              <span class="stat-num" data-count="1350">1,350</span>
+              <span class="stat-unit">万行</span>
+              <span class="stat-label">每日车辆活跃表</span>
+            </div>
+            <div class="stat">
+              <span class="stat-num" data-count="633">633</span>
+              <span class="stat-unit">万条</span>
+              <span class="stat-label">路况事件表</span>
+            </div>
+            <div class="stat">
+              <span class="stat-num" data-count="319">319</span>
+              <span class="stat-unit">篇</span>
+              <span class="stat-label">知识库技术文档</span>
+            </div>
+            <div class="stat">
+              <span class="stat-num" data-count="68">68</span>
+              <span class="stat-unit">万</span>
+              <span class="stat-label">车辆档案</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 5. 使用场景 ============ -->
+      <section class="section" id="scenarios">
+        <div class="container">
+          <h2 class="reveal">三个真实场景</h2>
+          <p class="lead reveal" style="--d: 0.08s">
+            每个场景都是一次完整的「问 → 做 →
+            得」闭环，来自专家日常巡检的真实需求。
+          </p>
+          <div class="scn-grid">
+            <article class="scn card reveal" style="--d: 0.04s">
+              <h3>摩擦数据体检</h3>
+              <div class="scn-step scn-ask">
+                <span class="scn-tag">问</span>
+                <p class="q">「最近 7 天摩擦系数质量分布」</p>
+              </div>
+              <div class="scn-step scn-do">
+                <span class="scn-tag">做</span>
+                <p>Agent 查车辆摩擦数据，聚合质量指标，生成分布柱状图。</p>
+              </div>
+              <div class="scn-step scn-get">
+                <span class="scn-tag">得</span>
+                <p>
+                  <b>median 0.79，11.72% VIN 低附着</b>，一眼定位异常车辆群体。
+                </p>
+              </div>
+              <div class="scn-foot">
+                涉及：语音问答 · 数据仓库直连 · echarts
+              </div>
+            </article>
+
+            <article class="scn card reveal" style="--d: 0.12s">
+              <h3>异常归因</h3>
+              <div class="scn-step scn-ask">
+                <span class="scn-tag">问</span>
+                <p class="q">「08-12 摩擦数据量为什么骤降 64.68%」</p>
+              </div>
+              <div class="scn-step scn-do">
+                <span class="scn-tag">做</span>
+                <p>Agent JOIN 双表沿采集链路排查，输出趋势曲线。</p>
+              </div>
+              <div class="scn-step scn-get">
+                <span class="scn-tag">得</span>
+                <p><b>定位到采集链路异常</b>，非业务波动，直接指向修复方向。</p>
+              </div>
+              <div class="scn-foot">涉及：文字问答 · 双表 JOIN · 曲线图</div>
+            </article>
+
+            <article class="scn card reveal" style="--d: 0.2s">
+              <h3>知识问答</h3>
+              <div class="scn-step scn-ask">
+                <span class="scn-tag">问</span>
+                <p class="q">「地图匹配服务怎么实现」</p>
+              </div>
+              <div class="scn-step scn-do">
+                <span class="scn-tag">做</span>
+                <p>Agent 检索知识库 319 篇技术文档，组织答案。</p>
+              </div>
+              <div class="scn-step scn-get">
+                <span class="scn-tag">得</span>
+                <p><b>架构说明 + mermaid 流程图</b>，可对照代码继续深挖。</p>
+              </div>
+              <div class="scn-foot">涉及：知识库检索 · mermaid 流程图</div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 6. 架构图 ============ -->
+      <section class="section" id="architecture">
+        <div class="container">
+          <span class="eyebrow reveal">六层架构</span>
+          <h2 class="reveal">从对话到数据的完整链路</h2>
+          <p class="lead reveal" style="--d: 0.08s">
+            请求自上而下流转，工具层与模型层并行服务问答，数据全程只读。
+          </p>
+          <div class="arch reveal" style="--d: 0.14s">
+            <div class="arch-layer">
+              <div class="arch-rail">
+                <span class="rail-node"></span><span class="rail-line"></span
+                ><span class="rail-pulse"></span>
+              </div>
+              <div class="arch-label">
+                <h3>前端层</h3>
+                <span>界面与交互</span>
+              </div>
+              <div class="arch-chips">
+                <span class="chip">原生 HTML + JS（零构建）</span>
+                <span class="chip">JARVIS 粒子球（六态）</span>
+                <span class="chip"
+                  >聊天流 + 富渲染（echarts / mermaid / 表格）</span
+                >
+              </div>
+            </div>
+            <div class="arch-layer">
+              <div class="arch-rail">
+                <span class="rail-node"></span><span class="rail-line"></span
+                ><span class="rail-pulse"></span>
+              </div>
+              <div class="arch-label">
+                <h3>服务层</h3>
+                <span>编排与推理</span>
+              </div>
+              <div class="arch-chips">
+                <span class="chip">Node ≥ 22</span>
+                <span class="chip">TypeScript</span>
+                <span class="chip">Hono 4</span>
+                <span class="chip">pi SDK（进程内嵌入）</span>
+                <span class="chip">pi-mcp-adapter</span>
+              </div>
+            </div>
+            <div class="arch-layer">
+              <div class="arch-rail">
+                <span class="rail-node"></span><span class="rail-line"></span
+                ><span class="rail-pulse"></span>
+              </div>
+              <div class="arch-label">
+                <h3>工具层</h3>
+                <span>MCP 工具链</span>
+              </div>
+              <div class="arch-chips">
+                <span class="chip">anysearch（联网搜索）</span>
+                <span class="chip">知识库检索 MCP（RAG）</span>
+                <span class="chip">内部数据仓库只读直连（db-ro.sh）</span>
+              </div>
+            </div>
+            <div class="arch-layer">
+              <div class="arch-rail">
+                <span class="rail-node"></span><span class="rail-line"></span
+                ><span class="rail-pulse"></span>
+              </div>
+              <div class="arch-label">
+                <h3>模型层</h3>
+                <span>语音与推理</span>
+              </div>
+              <div class="arch-chips">
+                <span class="chip">LLM deepseek（公开模型网关）</span>
+                <span class="chip">MiMo ASR</span>
+                <span class="chip">MiMo TTS</span>
+              </div>
+            </div>
+            <div class="arch-layer">
+              <div class="arch-rail">
+                <span class="rail-node"></span><span class="rail-line"></span
+                ><span class="rail-pulse"></span>
+              </div>
+              <div class="arch-label">
+                <h3>数据层</h3>
+                <span>数据与知识</span>
+              </div>
+              <div class="arch-chips">
+                <span class="chip">内部数据仓库 PostgreSQL（只读）</span>
+                <span class="chip">知识库（319 篇文档）</span>
+              </div>
+            </div>
+            <div class="arch-layer">
+              <div class="arch-rail">
+                <span class="rail-node"></span><span class="rail-line"></span
+                ><span class="rail-pulse"></span>
+              </div>
+              <div class="arch-label">
+                <h3>部署层</h3>
+                <span>运行环境</span>
+              </div>
+              <div class="arch-chips">
+                <span class="chip">K8s（内部云平台）</span>
+                <span class="chip">GitOps / Kustomize</span>
+                <span class="chip">企业网关入口</span>
+                <span class="chip">企业 SSO 鉴权 + 权限组</span>
+                <span class="chip">受限出站网络</span>
+              </div>
+            </div>
+          </div>
+          <p class="arch-note reveal" style="--d: 0.2s">
+            请求链路：语音 / 文字 → 服务编排 → MCP 工具执行 →
+            数据返回，全程只读。
+          </p>
+        </div>
+      </section>
+
+      <!-- ============ 7. 未来路线图 ============ -->
+      <section class="section" id="roadmap">
+        <div class="container">
+          <span class="eyebrow reveal">路线图</span>
+          <h2 class="reveal">从一个领域起步，scale 成通用 Agent</h2>
+          <p class="lead reveal" style="--d: 0.08s">
+            先服务车辆安全互联数据域，再扩展到全部 ADAS
+            领域，最后成为可复用的数据问答入口。
+          </p>
+          <div class="tl reveal" style="--d: 0.12s">
+            <div class="tl-item tl-now">
+              <div class="tl-dot"><span class="tl-tag">当前</span></div>
+              <h3>首个业务域已接入</h3>
+              <p>
+                当前已接入首个业务域的数据与知识库，服务部署于
+                内部云平台，专家日常巡检已可用。
+              </p>
+            </div>
+            <div class="tl-item">
+              <div class="tl-dot"></div>
+              <h3>扩展到全部 ADAS 领域</h3>
+              <p>
+                接入更多 ADAS
+                领域的数据与知识库，领域知识按需注入，一次提问覆盖更多数据源。
+              </p>
+            </div>
+            <div class="tl-item">
+              <div class="tl-dot"></div>
+              <h3>可 scale 的 AI Agent</h3>
+              <p>同一套框架承载多个领域 Agent，成为团队统一的数据问答入口。</p>
+            </div>
+          </div>
+          <div class="tl-ext reveal" style="--d: 0.2s">
+            <span class="tl-ext-title">扩展点</span>
+            <span class="chip">config.json：MCP 段可增任意服务器</span>
+            <span class="chip">extensions/：挂自定义工具</span>
+            <span class="chip">skills/：按需注入领域能力</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ============ 8. Footer ============ -->
+    <footer class="footer">
+      <div class="container">
+        <div class="sec-grid">
+          <div class="sec-item reveal">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" />
+              <path d="M9.5 12l1.8 1.8 3.4-3.6" />
+            </svg>
+            <strong>企业 SSO + 权限组鉴权</strong>
+            <span>未授权成员无法进入，权限按企业权限组控制。</span>
+          </div>
+          <div class="sec-item reveal" style="--d: 0.06s">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="5" y="11" width="14" height="9" rx="2" />
+              <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+            </svg>
+            <strong>仅内网可访问</strong>
+            <span>不暴露公网入口，服务只在内网环境提供。</span>
+          </div>
+          <div class="sec-item reveal" style="--d: 0.12s">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <ellipse cx="12" cy="5" rx="8" ry="3" />
+              <path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5" />
+              <path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" />
+            </svg>
+            <strong>数据库只读直连</strong>
+            <span>查询账号只读，不持有任何写权限。</span>
+          </div>
+          <div class="sec-item reveal" style="--d: 0.18s">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="8" cy="15" r="4" />
+              <path d="M11 12L20 3M17 7l3 3" />
+            </svg>
+            <strong>配置密钥存 K8s Secret</strong>
+            <span>凭证只存在于集群 Secret，不入代码、不入页面。</span>
+          </div>
+        </div>
+        <p class="access reveal">
+          <strong>访问方式：</strong>内网登录企业网关入口后进入
+          <code>/voice-agent/</code>，企业 SSO 校验权限组 成员资格后即可使用。
+        </p>
+      </div>
+    </footer>
+
+    <noscript>
+      <style>
+        .reveal {
+          opacity: 1;
+          transform: none;
+        }
+      </style>
+    </noscript>
+
+    <script>
+      (function () {
+        "use strict";
+
+        var reduceMotion = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches;
+
+        /* ============ 主题切换 ============ */
+        var root = document.documentElement;
+        var themeBtn = document.getElementById("themeToggle");
+        if (themeBtn) {
+          themeBtn.addEventListener("click", function () {
+            var next =
+              root.getAttribute("data-theme") === "light" ? "dark" : "light";
+            root.setAttribute("data-theme", next);
+            try {
+              localStorage.setItem("va-theme", next);
+            } catch (e) {}
+            if (typeof updateParticleColor === "function")
+              updateParticleColor();
+          });
+        }
+
+        /* ============ 滚动渐入 ============ */
+        var reveals = document.querySelectorAll(".reveal");
+        if ("IntersectionObserver" in window && !reduceMotion) {
+          var io = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (en) {
+                if (en.isIntersecting) {
+                  en.target.classList.add("in");
+                  io.unobserve(en.target);
+                }
+              });
+            },
+            { threshold: 0.15, rootMargin: "0px 0px -6% 0px" },
+          );
+          reveals.forEach(function (el) {
+            io.observe(el);
+          });
+        } else {
+          reveals.forEach(function (el) {
+            el.classList.add("in");
+          });
+        }
+
+        /* ============ 数字 count-up ============ */
+        function easeOutCubic(t) {
+          return 1 - Math.pow(1 - t, 3);
+        }
+        var nums = document.querySelectorAll(".stat-num");
+        function runCountUp(el) {
+          var target = parseInt(el.getAttribute("data-count"), 10);
+          var dur = 1300;
+          var start = null;
+          function fmt(n) {
+            return Math.round(n).toLocaleString("en-US");
+          }
+          function frame(ts) {
+            if (start === null) start = ts;
+            var p = Math.min((ts - start) / dur, 1);
+            el.textContent = fmt(target * easeOutCubic(p));
+            if (p < 1) requestAnimationFrame(frame);
+          }
+          requestAnimationFrame(frame);
+        }
+        if ("IntersectionObserver" in window && !reduceMotion) {
+          var numIO = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (en) {
+                if (en.isIntersecting) {
+                  runCountUp(en.target);
+                  numIO.unobserve(en.target);
+                }
+              });
+            },
+            { threshold: 0.5 },
+          );
+          nums.forEach(function (el) {
+            numIO.observe(el);
+          });
+        }
+
+        /* ============ Hero 粒子背景 ============ */
+        var canvas = document.getElementById("heroCanvas");
+        if (canvas && canvas.getContext) {
+          var ctx = canvas.getContext("2d");
+          var particles = [];
+          var COUNT = 72;
+          var LINK_DIST = 110;
+          var running = true;
+          var heroInView = true;
+          var particleColor = "rgba(45, 212, 191, 0.5)";
+
+          function readParticleColor() {
+            var c = getComputedStyle(root)
+              .getPropertyValue("--particle")
+              .trim();
+            if (c) particleColor = c;
+          }
+          window.updateParticleColor = readParticleColor;
+
+          function resize() {
+            var dpr = Math.min(window.devicePixelRatio || 1, 2);
+            var w = canvas.clientWidth,
+              h = canvas.clientHeight;
+            canvas.width = w * dpr;
+            canvas.height = h * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          }
+
+          function initParticles() {
+            var w = canvas.clientWidth,
+              h = canvas.clientHeight;
+            particles = [];
+            for (var i = 0; i < COUNT; i++) {
+              // 前 14 颗偏置到左上象限（H1 文字后方），提升该区域可见粒子密度
+              var inUL = i < 14;
+              particles.push({
+                x: inUL ? Math.random() * w * 0.45 : Math.random() * w,
+                y: inUL ? Math.random() * h * 0.45 : Math.random() * h,
+                vx: (Math.random() - 0.5) * 0.32,
+                vy: (Math.random() - 0.5) * 0.32,
+                r: 0.8 + Math.random() * 1.6,
+              });
+            }
+          }
+
+          function draw() {
+            var w = canvas.clientWidth,
+              h = canvas.clientHeight;
+            ctx.clearRect(0, 0, w, h);
+            ctx.fillStyle = particleColor;
+            for (var i = 0; i < particles.length; i++) {
+              var p = particles[i];
+              p.x += p.vx;
+              p.y += p.vy;
+              if (p.x < -10) p.x = w + 10;
+              else if (p.x > w + 10) p.x = -10;
+              if (p.y < -10) p.y = h + 10;
+              else if (p.y > h + 10) p.y = -10;
+              ctx.globalAlpha = 0.55;
+              ctx.beginPath();
+              ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+            for (var a = 0; a < particles.length; a++) {
+              for (var b = a + 1; b < particles.length; b++) {
+                var dx = particles[a].x - particles[b].x;
+                var dy = particles[a].y - particles[b].y;
+                var d2 = dx * dx + dy * dy;
+                if (d2 < LINK_DIST * LINK_DIST) {
+                  var alpha = (1 - Math.sqrt(d2) / LINK_DIST) * 0.18;
+                  ctx.strokeStyle = particleColor;
+                  ctx.globalAlpha = alpha;
+                  ctx.lineWidth = 1;
+                  ctx.beginPath();
+                  ctx.moveTo(particles[a].x, particles[a].y);
+                  ctx.lineTo(particles[b].x, particles[b].y);
+                  ctx.stroke();
+                }
+              }
+            }
+            ctx.globalAlpha = 1;
+          }
+
+          function loop() {
+            if (!running || !heroInView) return;
+            draw();
+            requestAnimationFrame(loop);
+          }
+
+          readParticleColor();
+          resize();
+          initParticles();
+
+          if (reduceMotion) {
+            draw(); // 静态一帧
+          } else {
+            requestAnimationFrame(loop);
+          }
+
+          window.addEventListener("resize", function () {
+            resize();
+            initParticles();
+            if (reduceMotion) draw();
+          });
+          if ("IntersectionObserver" in window) {
+            new IntersectionObserver(
+              function (entries) {
+                heroInView = entries[0].isIntersecting;
+                if (heroInView && !reduceMotion) requestAnimationFrame(loop);
+              },
+              { threshold: 0 },
+            ).observe(canvas);
+          }
+          document.addEventListener("visibilitychange", function () {
+            if (document.hidden) {
+              running = false;
+            } else {
+              running = true;
+              if (heroInView && !reduceMotion) requestAnimationFrame(loop);
+            }
+          });
+        }
+
+        /* ============ 对话演示动画 ============ */
+        var demoBody = document.getElementById("demoBody");
+        var orb = document.getElementById("orb");
+        var demoStatus = document.getElementById("demoStatus");
+        if (demoBody && !reduceMotion) {
+          var msgQ = document.getElementById("msgQ");
+          var msgThink = document.getElementById("msgThink");
+          var msgAns = document.getElementById("msgAns");
+          var typeQ = document.getElementById("typeQ");
+          var waveQ = document.getElementById("waveQ");
+          var chipTool = document.getElementById("chipTool");
+          var chipText = document.getElementById("chipText");
+          var thinkLabel = document.getElementById("thinkLabel");
+          var FULL_TEXT = "上周早高峰摩擦数据量多少";
+          var timer = null;
+          var heroVisible = true;
+
+          function setStatus(txt, active) {
+            demoStatus.textContent = txt;
+            orb.classList.toggle("active", !!active);
+          }
+
+          function reset() {
+            [msgQ, msgThink, msgAns].forEach(function (m) {
+              m.classList.remove("show", "out");
+            });
+            chipTool.classList.remove("show", "done");
+            waveQ.classList.remove("on");
+            typeQ.textContent = "";
+            thinkLabel.textContent = "思考中";
+            chipText.textContent = "MCP · 数据仓库 psql 只读查询";
+            setStatus("就绪", false);
+          }
+
+          function typeText(el, text, done) {
+            var i = 0;
+            (function step() {
+              if (i <= text.length) {
+                el.textContent = text.slice(0, i);
+                i++;
+                timer = setTimeout(step, 46);
+              } else {
+                done();
+              }
+            })();
+          }
+
+          function play() {
+            reset();
+            setStatus("聆听中", true);
+            timer = setTimeout(function () {
+              msgQ.classList.add("show");
+              waveQ.classList.add("on");
+            }, 250);
+            timer = setTimeout(function () {
+              typeText(typeQ, FULL_TEXT, function () {
+                waveQ.classList.remove("on");
+                timer = setTimeout(function () {
+                  setStatus("思考中", true);
+                  msgThink.classList.add("show");
+                  timer = setTimeout(function () {
+                    chipTool.classList.add("show");
+                    thinkLabel.textContent = "调用工具";
+                    timer = setTimeout(function () {
+                      chipTool.classList.add("done");
+                      chipText.textContent = "数据仓库查询完成";
+                      timer = setTimeout(function () {
+                        setStatus("播报中", true);
+                        msgThink.classList.add("out");
+                        msgAns.classList.add("show");
+                        timer = setTimeout(function () {
+                          setStatus("就绪", false);
+                          timer = setTimeout(play, 1800);
+                        }, 2400);
+                      }, 900);
+                    }, 1300);
+                  }, 900);
+                }, 700);
+              });
+            }, 350);
+          }
+
+          if ("IntersectionObserver" in window) {
+            new IntersectionObserver(
+              function (entries) {
+                var vis = entries[0].isIntersecting;
+                if (vis && !heroVisible) {
+                  heroVisible = true;
+                  clearTimeout(timer);
+                  play();
+                }
+                if (!vis && heroVisible) {
+                  heroVisible = false;
+                  clearTimeout(timer);
+                }
+              },
+              { threshold: 0.3 },
+            ).observe(document.getElementById("hero"));
+          }
+          play();
+        } else if (demoBody) {
+          // 减少动效：直接展示完整对话
+          ["msgQ", "msgThink", "msgAns"].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.classList.add("show");
+          });
+          var chip = document.getElementById("chipTool");
+          if (chip) chip.classList.add("show", "done");
+        }
+      })();
+    </script>
+  </body>
+</html>
