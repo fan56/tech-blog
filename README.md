@@ -1,6 +1,7 @@
 # Tech Blog
 
 个人技术博客,基于 GitHub Pages 纯静态托管。
+正式站点: <https://fan56.github.io/tech-blog/>
 
 ## 结构
 
@@ -18,3 +19,4 @@ pi/             Pi · 我的终端 AI 编排者(单文件展示页)
 ## 部署
 
 GitHub Pages → Deploy from a branch → `main` / root。仓库根目录有 `.nojekyll`,跳过 Jekyll 构建,HTML 原样托管。
+线上地址: <https://fan56.github.io/tech-blog/>
