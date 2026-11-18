@@ -1,0 +1,1066 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>三种把 agent 变成队友的形状 · 机制对照</title>
+<style>
+:root{
+  --bg:#fbfaf8; --panel:#ffffff; --panel2:#ffffff; --code:#f6f5f2;
+  --line:rgba(20,20,20,.10); --line2:rgba(20,20,20,.18);
+  --fg:#171717; --muted:#4d4d4d; --faint:#737373;
+  --primary:#1d4ed8; --a:#0f766e; --c:#b45309;
+  --act:#4338ca; --id-dsh:#475569; --id-sa:#6d28d9; --id-lt:#be123c;
+  --mono:ui-monospace,"SF Mono",Menlo,monospace;
+  --sans:-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --code-lh:18px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+html{scroll-padding-top:calc(var(--tb,56px) + 18px)}
+body{padding:var(--tb,56px) 0 var(--hb,132px);overflow-x:hidden;
+  min-height:100dvh;display:flex;flex-direction:column}
+main{flex:1 0 auto;width:100%;display:flex;flex-direction:column}
+a{color:var(--primary)}
+code{font-family:var(--mono);font-size:.94em}
+/* ---------- top bar + legend ---------- */
+.topbar{position:fixed;inset:0 0 auto 0;height:56px;display:flex;align-items:center;gap:18px;padding:0 18px;
+  background:#ffffffe0;border-bottom:1px solid var(--line);backdrop-filter:blur(8px);z-index:60}
+.brand{font:600 12.5px/1.2 var(--mono);letter-spacing:.05em;color:var(--fg);white-space:nowrap}
+.brand small{display:block;font:400 10.5px/1.4 var(--sans);color:var(--muted);letter-spacing:0}
+.dots{display:flex;gap:7px;margin-left:auto}
+.dot{width:26px;height:26px;border-radius:8px;border:1px solid var(--line2);background:#ffffff;color:var(--faint);
+  font:600 11px/1 var(--mono);cursor:pointer;transition:color .3s,border-color .3s,background .3s}
+.dot:hover{color:var(--fg);border-color:rgba(20,20,20,.32)}
+.dot.on{color:#ffffff;background:#171717;border-color:#171717}
+.legend{display:flex;gap:14px;align-items:center;font-size:11px;color:var(--muted);white-space:nowrap}
+.legend b{font-weight:600;color:var(--fg)}
+.k{display:inline-block;width:20px;height:0;border-top:1.5px solid var(--a);vertical-align:-3px;margin-right:5px}
+.k.b{border-top-style:dotted;border-color:var(--primary)}
+.k.c{border-top-style:dashed;border-color:var(--c)}
+/* ---------- scenes ---------- */
+.scene{display:none;width:100%;max-width:1220px;margin:0 auto;padding:26px 22px 6px}
+.scene.on{display:flex;flex-direction:column;justify-content:flex-start;
+  min-height:calc(100dvh - var(--tb,56px) - var(--hb,132px) - 34px)}
+.scene.on.fit{justify-content:center}
+.eyebrow{font:500 11.5px/1.4 var(--mono);color:var(--faint);letter-spacing:.08em;text-transform:uppercase}
+h1{font-size:clamp(29px,6vw,54px);line-height:1.34;margin:14px 0 10px;letter-spacing:-.02em;text-wrap:balance;color:var(--lt-head,var(--fg))}
+h2{font-size:clamp(19px,2.6vw,26px);margin:6px 0 8px;letter-spacing:-.01em;text-wrap:balance;color:var(--lt-head,var(--fg))}
+h3{font-size:13.5px;margin:0 0 6px;letter-spacing:.01em;color:var(--lt-head,var(--fg))}
+.lede{font-size:clamp(13.5px,1.6vw,16px);line-height:1.75;color:var(--lt-body,var(--muted));max-width:66ch;margin:0 0 18px}
+.sub{font-size:12.5px;color:var(--lt-body,var(--muted));margin:0 0 18px;line-height:1.7}
+/* ---------- dim / lit / cur ---------- */
+/* 未点亮不再用 opacity 减淡（浅底上 #737373×.55≈#b9b9b9，约 1.9:1 读不了）；改显式颜色。
+   --lt-body/--lt-head 随 .dim.on 级联，嵌套的已点亮子节点自动取点亮色。 */
+.dim{opacity:1;color:#6b6b6b;--lt-body:#6b6b6b;--lt-head:#545454;
+  --acc:var(--primary);--accsoft:rgba(29,78,216,.30);--acctint:rgba(29,78,216,.05);
+  transition:color .4s ease,box-shadow .4s ease,border-color .4s ease,background .4s ease}
+.dim.on{opacity:1;color:#2b2b2b;--lt-body:#2b2b2b;--lt-head:#000}
+.card.dim.on,.node.dim.on,.cmp-row.dim.on,.shape.dim.on,.lane.dim.on,.align.dim.on,.block.dim.on{position:relative}
+.card.dim.on::before,.node.dim.on::before,.cmp-row.dim.on::before,
+.shape.dim.on::before,.lane.dim.on::before,.align.dim.on::before,.block.dim.on::before{content:"";position:absolute;left:0;top:0;bottom:0;
+  width:3px;border-radius:10px 0 0 10px;background:var(--who,rgba(20,20,20,.12));opacity:.65;
+  transition:opacity .35s ease,width .35s ease}
+.card.dim.on.cur::before,.node.dim.on.cur::before,.cmp-row.dim.on.cur::before,
+.shape.dim.on.cur::before,.lane.dim.on.cur::before,.align.dim.on.cur::before,.block.dim.on.cur::before{opacity:1;width:4px}
+.card{border:1px solid var(--line);border-radius:12px;padding:13px 15px;background:var(--panel);transition:opacity .4s,box-shadow .4s,border-color .4s}
+.card p{margin:0;font-size:12.5px;line-height:1.65;color:var(--lt-body,var(--muted))}
+.card.dim.on{background:#ffffff;border-color:rgba(20,20,20,.16)}
+.card.dim.on.cur{background:#ffffff;border-color:var(--acc);border-width:1.5px;
+  box-shadow:0 1px 2px rgba(0,0,0,.06),0 8px 24px -16px rgba(0,0,0,.18)}
+.node.dim.on{background:#ffffff;border-color:rgba(20,20,20,.16)}
+.node.dim.on.cur{background:#ffffff;border-color:var(--acc);border-width:1.5px;
+  box-shadow:0 1px 2px rgba(0,0,0,.06),0 8px 24px -16px rgba(0,0,0,.18)}
+.card.dim.on h3,.node.dim.on b,.shape.dim.on b{color:#000000}
+.card.dim.on p{color:var(--lt-body,#2b2b2b)}
+blockquote.dim.on{border-left-width:3px;background:#ffffff}
+.ev-a{border-width:1.5px;border-color:rgba(15,118,110,.30);border-style:solid;--acc:#0f766e;--accsoft:rgba(15,118,110,.30);--acctint:rgba(15,118,110,.06)}
+.ev-b{border-width:1.5px;border-color:rgba(29,78,216,.30);border-style:dotted;--acc:#1d4ed8;--accsoft:rgba(29,78,216,.30);--acctint:rgba(29,78,216,.05)}
+.ev-c{border-width:1.5px;border-color:rgba(180,83,9,.30);border-style:dashed;--acc:#b45309;--accsoft:rgba(180,83,9,.30);--acctint:rgba(180,83,9,.07)}
+/* 未点亮卡片：暖白底 + 中性细边 + 无投影 */
+.card.dim:not(.on),.node.dim:not(.on),.cmp-row.dim:not(.on),
+.lane.dim:not(.on),.align.dim:not(.on),.block.dim:not(.on),
+.shapes.dim:not(.on) .shape,.legendbox.dim:not(.on) .lg{
+  background:#fdfcfa;border-color:rgba(20,20,20,.12);box-shadow:none}
+blockquote.dim:not(.on){background:#fdfcfa;box-shadow:none}
+/* 已点亮卡片恢复白卡 + 中性边框（.cur 由各自强调规则覆盖，保持不变） */
+.shapes.dim.on .shape,.legendbox.dim.on .lg{background:#ffffff;border-color:rgba(20,20,20,.16)}
+/* ---------- cover ---------- */
+.shapes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:2px 0 20px}
+.shape{border:1px solid var(--line2);border-radius:12px;padding:13px 14px;background:var(--panel)}
+.shape b{display:block;font:600 13px/1.4 var(--sans);color:var(--lt-head,var(--fg));margin-bottom:4px}
+.shape span{font:400 11px/1.6 var(--mono);color:var(--lt-body,var(--muted))}
+.shape em{display:block;font:400 11px/1.6 var(--sans);color:var(--lt-body,var(--muted));margin-top:6px;font-style:normal}
+.shape.a{--acc:#0f766e;--accsoft:rgba(15,118,110,.30)}
+.shape.b{--acc:#1d4ed8;--accsoft:rgba(29,78,216,.30)}
+blockquote{margin:0 0 16px;padding:13px 16px;border-left:1.5px solid var(--primary);background:#ffffff;border-radius:0 10px 10px 0;
+  font-size:13px;line-height:1.72;color:var(--lt-body,var(--fg))}
+blockquote.ev-a{border-left-color:var(--a)}
+blockquote.ev-b{border-left-style:dotted;border-color:var(--primary)}
+blockquote cite{display:block;margin-top:8px;font:400 11px/1.5 var(--mono);color:var(--lt-body,var(--muted));font-style:normal}
+.legendbox{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:4px 0 12px}
+.legendbox .lg{border:1px solid var(--line);border-radius:10px;padding:11px 12px;background:#ffffff;font-size:11.5px;line-height:1.7;color:var(--muted)}
+.legendbox .lg b{font-weight:600}
+.legendbox .lg.a b{color:var(--a)}
+.legendbox .lg.b b{color:var(--primary)}
+.legendbox .lg.c b{color:var(--c)}
+.person{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:12px;margin:4px 0 12px}
+.person .kv{margin:0;padding-left:16px}
+.person .kv li{font-size:12px;line-height:1.95;color:var(--lt-body,var(--muted))}
+.person .kv code,.body code,.say code,.cell code{font:500 11px/1 var(--mono);background:var(--code);border:1px solid var(--line);
+  border-radius:4px;padding:1px 5px;color:#1d4ed8}
+/* ---------- evidence badges / notes ---------- */
+.gchip{display:inline-block;font:600 10.5px/1 var(--mono);padding:2px 5px;border-radius:4px;border:1px solid;margin-right:5px;vertical-align:1px;white-space:nowrap}
+.gchip.a{color:#0f766e;border-color:rgba(15,118,110,.38);background:rgba(15,118,110,.06)}
+.gchip.b{color:#1d4ed8;border-color:rgba(29,78,216,.38);background:rgba(29,78,216,.05)}
+.gchip.c{color:#b45309;border-color:rgba(180,83,9,.38);background:rgba(180,83,9,.03)}
+.vnote{display:block;font:400 10.5px/1.55 var(--mono);color:var(--lt-body,var(--faint));margin-top:4px}
+.en{color:#1d4ed8;font-style:italic}
+.note{background:var(--panel);border:1px solid var(--line);border-left:1.5px solid var(--primary);border-radius:10px;padding:13px 14px;margin:0 0 12px}
+.note .ptag{font:500 10.5px/1.4 var(--mono);color:var(--muted);letter-spacing:.03em;margin-bottom:8px}
+.note .quote{margin:0 0 9px;font-size:12.5px;line-height:1.7;color:var(--fg)}
+.note .plain{margin:0;font-size:12px;line-height:1.7;color:var(--muted)}
+.note.ev-a{border-left-color:var(--a)}
+.note.ev-b{border-left-color:var(--primary)}
+.note.ev-c{border-left-style:dashed;border-left-color:var(--c)}
+/* ---------- pipes / lanes ---------- */
+.lane{margin:0 0 16px;border:1px solid var(--line);border-radius:12px;padding:11px 13px 6px;background:#ffffff}
+.lane>.lhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;margin-bottom:8px}
+.lane>.lhead h3{margin:0}
+.lane>.lhead .sub{margin:0;font-size:11px}
+.pipe-wrap{position:relative;width:max-content;max-width:100%;padding:6px 0 10px;--p:0}
+.wire{position:absolute;left:8px;right:8px;top:50%;height:1.5px;background:linear-gradient(90deg,rgba(29,78,216,.9),rgba(29,78,216,.45));
+  transform:scaleX(var(--p));transform-origin:left;transition:transform .48s ease;pointer-events:none;z-index:0}
+.pipe{position:relative;display:flex;gap:14px;overflow-x:auto;padding:2px 2px 8px;z-index:1;scrollbar-width:thin}
+.node{position:relative;flex:0 0 120px;min-height:74px;display:flex;flex-direction:column;justify-content:center;gap:3px;
+  padding:8px 9px;border:1px solid var(--line2);border-radius:10px;background:#ffffff}
+.node b{font:600 11px/1.3 var(--sans);letter-spacing:-.01em;color:var(--lt-head,var(--fg));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.node span{font:400 10px/1.4 var(--sans);color:var(--lt-body,var(--muted));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.node:not(:last-child)::after{content:"\2192";position:absolute;right:-13px;top:50%;transform:translateY(-50%);
+  font:400 15px/1 var(--mono);color:rgba(29,78,216,.75);pointer-events:none;z-index:2}
+/* ---------- panels / code ---------- */
+.panel{display:none}
+.panel.on{display:block}
+.left,.right,.panel,.card,.code,pre{min-width:0}
+pre{overflow-x:auto;max-width:100%}
+.dim,.panel,h1,h2,.block,.cmp-row,.scene-head{scroll-margin-top:calc(var(--tb,56px) + 12px);scroll-margin-bottom:124px}
+.code{margin:0 0 12px;background:var(--code);border:1px solid var(--line);border-left:1.5px solid var(--a);border-radius:10px;overflow:hidden}
+.code.ev-b{border-left-color:var(--primary);border-left-style:dotted}
+.code figcaption{display:flex;align-items:center;gap:8px;padding:8px 12px;
+  border-bottom:1px solid var(--line);background:#f1f0ec;font:500 11px/1.4 var(--mono);color:#6b7280}
+.code figcaption .tag{margin-left:auto;color:var(--a)}
+.code.ev-b figcaption .tag{color:var(--primary)}
+.code pre{margin:0;padding:9px 13px;max-height:calc(var(--code-lh) * 17);overflow:auto;
+  font:11.5px/var(--code-lh) var(--mono);color:var(--fg);white-space:pre;tab-size:2;
+  scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.15) transparent}
+.code pre code{display:block;font-family:var(--mono);font-size:inherit;line-height:inherit;tab-size:2;padding:0;background:none;border:0;border-radius:0}
+.code pre code.en{color:var(--fg);font-style:normal}
+.code pre::-webkit-scrollbar{height:8px;width:8px}
+.code pre::-webkit-scrollbar-track{background:transparent}
+.code pre::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:8px}
+.code pre::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.25)}
+.say{padding:8px 12px;border-top:1px solid var(--line);background:#f1f0ec;font-size:11.5px;line-height:1.6;color:var(--muted)}
+/* ---------- align matrix ---------- */
+.align{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#ffffff;margin:2px 0 10px}
+.align .h{font:600 10.5px/1.4 var(--mono);color:var(--lt-body,var(--muted));letter-spacing:.06em;text-transform:uppercase;padding:2px 4px}
+.align .h.q{color:var(--primary)}
+.align .c{font-size:12px;line-height:1.6;color:var(--lt-body,var(--fg));padding:8px;border:1px solid var(--line);border-radius:8px;background:#fbfaf8}
+.align .c b{display:block;color:var(--lt-head,var(--fg));font-size:11.5px;margin-bottom:2px}
+.align .c.q0{border-left:2px solid #4d4d4d}
+.align .c.q1{border-left:2px solid var(--primary)}
+.align .c.q2{border-left:2px solid var(--a)}
+/* ---------- comparison ---------- */
+.cmp-head,.cmp-row{display:grid;gap:10px;align-items:start}
+.cmp-head.cmp4,.cmp-row.cmp4{grid-template-columns:88px repeat(3,minmax(0,1fr))}
+.cmp-head{padding:4px 10px 6px;font:600 10.5px/1.4 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.cmp-head .cold{color:#4d4d4d}
+.cmp-head .warm{color:var(--primary)}
+.cmp-head .warm2{color:var(--a)}
+/* 幕 2 列头吸顶（仅此幕有 .cmp-head；≤720px 时 .cmp-head 仍 display:none） */
+#scene2{--ch:26px}
+#scene2 .cmp-head{position:sticky;top:var(--tb,56px);z-index:5;background:#ffffff;
+  border-bottom:1px solid var(--line);box-shadow:0 6px 12px -10px rgba(0,0,0,.25)}
+#scene2 .cmp-row{scroll-margin-top:calc(var(--tb,56px) + var(--ch,26px) + 8px)}
+.cmp{display:flex;flex-direction:column;gap:6px;margin:2px 0 12px}
+.cmp-row{padding:10px;border:1px solid var(--line);border-radius:9px;background:#ffffff;--acc:#1d4ed8;--accsoft:rgba(29,78,216,.30);--acctint:rgba(29,78,216,.05)}
+.cmp-row>div:first-child{font-size:12px;font-weight:600;color:var(--lt-body,var(--muted));padding-top:1px}
+.cmp-row .cell{font-size:12.5px;line-height:1.6;color:var(--lt-body,var(--muted));padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#fbfaf8;align-items:start;align-self:start}
+.cmp-row .cell.dsh{color:var(--lt-body,var(--muted))}
+.cmp-row .cell.sa{color:var(--lt-body,var(--fg));border-left:2px solid rgba(29,78,216,.55)}
+.cmp-row .cell.lt{color:var(--lt-body,var(--fg));border-left:2px solid rgba(15,118,110,.55)}
+.cmp-row.dim.on{opacity:1;background:#ffffff;border-color:rgba(20,20,20,.16)}
+.cmp-row.dim.on.cur{background:#ffffff;border-color:var(--acc);border-width:1.5px;
+  box-shadow:0 1px 2px rgba(0,0,0,.06),0 8px 24px -16px rgba(0,0,0,.18)}
+.cmp-row.dim.on .cell{background:#ffffff}
+.cmp-panels{margin:6px 0 4px}
+/* ---------- 幕 3-5 blocks ---------- */
+.block{margin:0 0 16px;border:1px solid var(--line);border-radius:12px;padding:13px 15px 11px;background:#ffffff}
+.block>.bhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;margin-bottom:10px}
+.block>.bhead h3{margin:0}
+.block>.bhead .sub{margin:0;font-size:11px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.split .card{margin:0}
+.split .card p{margin:0 0 8px}
+.split .card p:last-of-type{margin-bottom:0}
+.split .tagline{display:block;font:600 10.5px/1.4 var(--mono);letter-spacing:.05em;color:var(--lt-body,var(--muted));margin-bottom:8px}
+.split .card.left .tagline{color:var(--primary)}
+.split .card.right .tagline{color:var(--a)}
+.split .card.caution .tagline{color:var(--c)}
+.mini{margin:8px 0 0;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--code);
+  font:11px/18px var(--mono);color:var(--fg);white-space:pre-wrap;overflow-x:auto}
+.concl{border:1px solid var(--a);border-radius:12px;padding:13px 15px;background:rgba(15,118,110,.06);
+  font-size:13px;line-height:1.75;color:#0b5b55;margin:10px 0 2px}
+.concl b{color:#0f766e}
+/* ---------- hud ---------- */
+.hud{position:fixed;inset:auto 0 0 0;background:#fffffff2;border-top:1px solid var(--line);
+  box-shadow:0 -8px 24px -20px rgba(0,0,0,.25);backdrop-filter:blur(8px);z-index:60}
+.bar{height:2px;background:#e9e7e2}
+.bar i{display:block;height:2px;width:0;background:var(--act);transition:width .4s ease}
+.hudrow{display:flex;gap:16px;align-items:center;padding:10px 18px 12px;max-width:1220px;margin:0 auto}
+.steptext{min-width:0;flex:1}
+.steptext b{display:block;font-size:13.5px;letter-spacing:.01em;margin-bottom:2px;color:var(--fg)}
+.steptext span{display:block;font-size:11.5px;line-height:1.55;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.ctl{display:flex;gap:8px;align-items:center;flex:0 0 auto}
+button.nav{padding:7px 13px;border-radius:8px;border:1px solid var(--line2);background:#ffffff;color:var(--fg);
+  font:500 12px/1 var(--sans);cursor:pointer;transition:background .25s,border-color .25s,color .25s}
+button.nav:hover:not(:disabled){background:#f3f1ee;border-color:rgba(20,20,20,.30)}
+button.nav:disabled{opacity:.4;cursor:default}
+button.nav#next{background:var(--primary);border-color:var(--primary);color:#ffffff}
+button.nav#next:hover:not(:disabled){background:#1e40af;border-color:#1e40af}
+.count{font:500 11px/1 var(--mono);color:var(--muted);min-width:88px;text-align:right}
+.allchip{display:none;font:600 10.5px/1 var(--mono);color:#ffffff;background:var(--c);padding:5px 8px;border-radius:999px}
+.allchip.on{display:inline-block}
+.hint{font-size:10.5px;color:var(--faint);text-align:center;padding:0 18px 6px}
+kbd{font:500 10px/1 var(--mono);border:1px solid var(--line2);border-bottom-width:2px;border-radius:4px;padding:2px 4px;color:var(--muted);background:#ffffff}
+/* ---------- details / page foot ---------- */
+details{border:1px solid var(--line);border-radius:12px;background:var(--panel);margin:12px 0;overflow:hidden}
+summary{cursor:pointer;padding:12px 15px;font-size:12.5px;font-weight:600;letter-spacing:.01em;list-style:none;color:var(--fg)}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"＋ ";color:var(--muted);font-family:var(--mono)}
+details[open] summary::before{content:"－ "}
+details .body{padding:0 15px 14px;font-size:12px;line-height:1.8;color:var(--muted)}
+.pagefoot{width:100%;max-width:1220px;margin:auto auto 0;padding:16px 22px 4px;border-top:1px solid var(--line);
+  display:flex;flex-wrap:wrap;gap:6px 18px;font-size:11px;line-height:1.7;color:var(--muted)}
+.pagefoot code{font-family:var(--mono);color:#1d4ed8}
+/* ---------- responsive ---------- */
+@media (max-width:980px){
+  .shapes,.legendbox,.person{grid-template-columns:1fr}
+}
+@media (max-width:720px){
+  body{padding-top:104px;padding-bottom:150px}
+  .topbar{height:auto;min-height:52px;padding:8px 12px;gap:8px;flex-wrap:wrap}
+  .brand small{display:none}
+  .legend{order:3;width:100%;font-size:10px;gap:10px;padding-bottom:6px;flex-wrap:wrap}
+  .dots{order:2;margin-left:auto}
+  .scene{padding:18px 13px 4px}
+  .hudrow{flex-wrap:wrap;gap:8px;padding:8px 12px 10px}
+  .steptext{flex:1 1 100%;order:1}
+  .ctl{order:2;flex:1 1 100%;justify-content:space-between}
+  .count{min-width:0}
+  h1{font-size:clamp(25px,7vw,38px);line-height:1.36;text-wrap:balance;color:var(--fg)}
+  .dim,.panel,h1,h2,.block,.cmp-row,.scene-head{scroll-margin-top:calc(var(--tb,56px) + 12px);scroll-margin-bottom:132px}
+  .pipe{display:flex;flex-direction:column;gap:8px;overflow:visible}
+  .pipe .node{flex:none;width:100%;min-height:0}
+  .pipe .node b,.pipe .node span{white-space:normal;overflow:visible;text-overflow:clip}
+  .pipe .node:not(:last-child)::after{content:"\2193";right:auto;left:50%;top:auto;bottom:-14px;
+    transform:translateX(-50%);color:rgba(29,78,216,.75)}
+  .wire{display:none}
+  .cmp-head{display:none}
+  .cmp-row.cmp4{grid-template-columns:1fr;gap:7px;padding:9px}
+  .cmp-row>div:first-child{font:600 11px/1.4 var(--mono);color:var(--muted);letter-spacing:.05em}
+  .cmp-row .cell{background:#fbfaf8}
+  .cmp-row .cell.dsh::before{content:"普通 dsh · ";color:#4d4d4d}
+  .cmp-row .cell.sa::before{content:"dsh-superagent · ";color:var(--primary)}
+  .cmp-row .cell.lt::before{content:"Lauren Tan · ";color:var(--a)}
+  .align{grid-template-columns:1fr}
+  .split{grid-template-columns:1fr}
+  .block{padding:11px 12px 10px}
+  .pagefoot{padding:14px 13px 4px}
+  .hint{display:none}
+  .code pre{max-height:38vh;font-size:11.5px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+  .wire{transition:none}
+}
+@media print{
+  .topbar,.hud{position:static}
+  body{padding:0}
+  .scene{display:flex!important}
+  .dim{opacity:1!important;color:inherit!important}
+  .panel{display:block!important}
+  .card,.node,.block,.cmp-row{break-inside:avoid}
+}
+
+/* ===== 色彩分层（仅视觉层）：B 身份色 / C 章节色；A 证据色保持原样 ===== */
+/* C 章节色：body[data-act] 由渲染时同步，驱动 eyebrow / 幕标题左竖线 / 进度条 / HUD 步标题 */
+body[data-act="0"]{--act:#4338ca}
+body[data-act="1"]{--act:#6d28d9}
+body[data-act="2"]{--act:#1d4ed8}
+body[data-act="3"]{--act:#be123c}
+body[data-act="4"]{--act:#4d7c0f}
+body[data-act="5"]{--act:#475569}
+.scene.on .eyebrow{color:var(--act)}
+.scene.on .scene-head h1,.scene.on .scene-head h2{border-left:3px solid var(--act);padding-left:11px}
+#stitle{position:relative;padding-left:10px}
+#stitle::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:14px;border-radius:2px;background:var(--act)}
+/* B 身份色：--who 只上竖条 / 归属文字 / 列头短横线；--who-tint 仅留变量，不铺卡片背景 */
+.who-dsh{--who:var(--id-dsh);--who-tint:rgba(71,85,105,.05)}
+.who-sa{--who:var(--id-sa);--who-tint:rgba(109,40,217,.05)}
+.who-lt{--who:var(--id-lt);--who-tint:rgba(190,18,60,.05)}
+.card.dim,.node.dim,.cmp-row.dim,.lane.dim,.align.dim,.block.dim,
+.card.who-dsh,.card.who-sa,.card.who-lt{position:relative}
+.card.dim::before,.node.dim::before,.cmp-row.dim::before,.lane.dim::before,.align.dim::before,.block.dim::before,
+.card.who-dsh::before,.card.who-sa::before,.card.who-lt::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:10px 0 0 10px;background:rgba(20,20,20,.12);transition:opacity .35s ease,width .35s ease}
+/* 已点亮元素：border-left-color 归身份通道；证据色只保留上/右/下三边 */
+.card.dim.on,.node.dim.on,.cmp-row.dim.on,.lane.dim.on,.align.dim.on,.block.dim.on,
+.card.dim.on.cur,.node.dim.on.cur,.cmp-row.dim.on.cur,.lane.dim.on.cur,.align.dim.on.cur,.block.dim.on.cur,
+.card.who-dsh,.card.who-sa,.card.who-lt{border-left-color:var(--who,rgba(20,20,20,.12))}
+/* 幕 1 三个形状标题 */
+.shapes .shape.who-dsh b{color:var(--id-dsh)}
+.shapes .shape.who-sa b{color:var(--id-sa)}
+.shapes .shape.who-lt b{color:var(--id-lt)}
+/* 幕 2 列头文字 + 列头下 2px 短横线（.cmp-head 吸顶规则与 ensureVisible() 未动） */
+#scene2 .cmp-head .who-dsh{color:var(--id-dsh)}
+#scene2 .cmp-head .who-sa{color:var(--id-sa)}
+#scene2 .cmp-head .who-lt{color:var(--id-lt)}
+#scene2 .cmp-head>div{position:relative}
+#scene2 .cmp-head>div::after{content:"";position:absolute;left:0;bottom:0;width:26px;height:2px;background:var(--who,transparent)}
+/* 幕 2 三列单元格：归属左条；幕 1 对齐矩阵沿用同一身份色 */
+#scene2 .cmp-row .cell.who-dsh{border-left:2px solid var(--who)}
+#scene2 .cmp-row .cell.who-sa{border-left:2px solid var(--who)}
+#scene2 .cmp-row .cell.who-lt{border-left:2px solid var(--who)}
+.align .c.who-dsh{border-left-color:var(--id-dsh)}
+.align .c.who-sa{border-left-color:var(--id-sa)}
+.align .c.who-lt{border-left-color:var(--id-lt)}
+/* 图例补充说明：与现有图例同字号，不加粗放大 */
+.legendbox .codekey{grid-column:1/-1;font-size:11.5px;line-height:1.75;color:var(--lt-body,var(--muted))}
+.codekey .sw{display:inline-block;width:14px;height:3px;vertical-align:3px;margin-right:6px;background:rgba(20,20,20,.12)}
+.codekey .sw.ids{background:linear-gradient(90deg,#475569,#6d28d9,#be123c)}
+.codekey .sw.act{background:var(--act)}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">三种把 agent 变成队友的形状<small>普通 dsh · dsh-superagent · Lauren Tan 的工作流 · 机制对照</small></div>
+  <nav class="dots" id="dots" aria-label="幕导航"></nav>
+  <div class="legend" aria-label="证据等级图例">
+    <span><i class="k"></i><b>A</b> 实线 · 一手/代码</span>
+    <span><i class="k b"></i><b>B</b> 点线 · 官方文档/厂商产品页</span>
+    <span><i class="k c"></i><b>C</b> 虚线 · 未核实/第三方整理</span>
+  </div>
+</header>
+
+<main id="stage">
+
+<!-- ============ 幕 0：封面 ============ -->
+<section class="scene" data-act="0" id="scene0">
+  <div class="scene-head">
+  <div class="eyebrow dim" id="cv-kicker">机制对照 · 三种形状 · 2026-11-17</div>
+  <h1 class="dim" id="cv-title">把 agent 变成队友的三种形状</h1>
+  <p class="lede dim" id="cv-sub">同一件事——让 agent 接住工作、自己收尾——可以有三种截然不同的系统形状。这里只对照机制，不比高下：谁触发、谁决策、谁验证、谁来收尾。</p>
+  </div>
+
+  <div class="shapes dim" id="cv-shapes">
+    <div class="shape who-dsh"><b>普通 dsh</b><span>单会话</span><em>人开口 → 一条线跑完</em></div>
+    <div class="shape who-sa"><b>dsh-superagent</b><span>事件驱动双层</span><em>Router 决策 + Worker 执行</em></div>
+    <div class="shape who-lt"><b>Lauren Tan</b><span>pstack + Grok Bot</span><em>协调者 + 云端 subagent + 新验证者</em></div>
+  </div>
+
+  <div class="person">
+    <div class="card dim ev-a who-lt" id="cv-person">
+      <h3>人物卡 · Lauren Tan（@poteto）</h3>
+      <ul class="kv">
+        <li>英文全名 <code>Lauren Tan</code>；handle <code>@poteto</code>；中文社群称「土豆姐」（由 handle 衍生，无一手英文自称）</li>
+        <li>现属 <b>SpaceXSI</b>（原 xAI，2026-02 并入 SpaceX）的 <b>Grok Bot</b> 团队</li>
+        <li>前 <b>Cursor / Meta / Netflix</b>；React Compiler core team</li>
+        <li>本人 X bio（mention 渲染形式）：<span class="en">grok @bot at @SpaceXSI. react compiler core team, prev cursor, meta, netflix</span> <span class="gchip a">A</span>
+          <span class="vnote">注：X 页面上 @bot 与 @SpaceXSI 是 mention 链接；抓纯文本会连写成「grok bot at SpaceXSI」，两种写法是同一条 bio。</span></li>
+      </ul>
+    </div>
+    <blockquote class="dim ev-a" id="cv-quote">
+      “<span class="en">i'm poteto. i'm not a president or ceo, but i've worked with millions of lines of code at Meta, Netflix, and Cursor. i'm also on the react core team where i help build and maintain react compiler.</span>”
+      <cite>pstack/README.md · 一手原文 · <span class="gchip a">A</span></cite>
+    </blockquote>
+  </div>
+
+  <div class="legendbox dim" id="cv-legend">
+    <div class="lg a"><b>A · 实线</b><br>可核查的一手原文或仓内代码。</div>
+    <div class="lg b"><b>B · 点线</b><br>官方文档或厂商产品页；厂商声明，非工程实现。</div>
+    <div class="lg c"><b>C · 虚线</b><br>未核实或第三方整理；仓内/公开材料无一手来源。</div>
+    <div class="codekey">
+      <div><i class="sw ids"></i>左侧竖条 = 哪一家（石板灰蓝 普通 dsh / 紫 dsh-superagent / 玫红 Lauren Tan）</div>
+      <div><i class="sw act"></i>幕头小字颜色 = 当前在第几幕</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 幕 1：三种形状 ============ -->
+<section class="scene" data-act="1" id="scene1">
+  <div class="scene-head">
+  <div class="eyebrow">幕 1 · 三种形状</div>
+  <h2>一条线、双层流水线、一群有分工的 agent</h2>
+  <p class="sub">每条线的节点按同一步点亮；带边框的英文为逐字原文，中文解释另起一行。点击「下一步」逐步推进。</p>
+  </div>
+
+  <div class="lane dim who-dsh" id="lane-dsh">
+    <div class="lhead"><h3>形状一 · 普通 dsh</h3><span class="sub">人输入 → 单会话 → 工具 → 回复 → 空闲（一条线）</span></div>
+    <div class="pipe-wrap" id="p-pipe">
+      <div class="wire"></div>
+      <div class="pipe">
+        <div class="node dim" id="p-n1"><b>人输入</b><span>一句提示词</span></div>
+        <div class="node dim" id="p-n2"><b>单会话</b><span>共享上下文</span></div>
+        <div class="node dim" id="p-n3"><b>工具</b><span>同步调用</span></div>
+        <div class="node dim" id="p-n4"><b>回复</b><span>输出到终端</span></div>
+        <div class="node dim" id="p-n5"><b>空闲</b><span>等下一句</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lane dim who-sa" id="lane-sa">
+    <div class="lhead"><h3>形状二 · dsh-superagent</h3><span class="sub">事件源轮询 → Trigger → gate() → Eval → Ticket → Worker Session → 回复 / PR</span></div>
+    <div class="pipe-wrap" id="q-pipe">
+      <div class="wire"></div>
+      <div class="pipe">
+        <div class="node dim" id="s-src"><b>Source 轮询</b><span>GitHub / Feishu</span></div>
+        <div class="node dim" id="s-trg"><b>Trigger</b><span>不可变事件</span></div>
+        <div class="node dim ev-a" id="s-gate"><b>gate()</b><span>纯函数先筛</span></div>
+        <div class="node dim" id="s-eval"><b>Eval</b><span>模型研判</span></div>
+        <div class="node dim" id="s-tkt"><b>Ticket</b><span>已授权工单</span></div>
+        <div class="node dim ev-a" id="s-wrk"><b>Worker Session</b><span>worker-&lt;id&gt; + 目录</span></div>
+        <div class="node dim" id="s-out"><b>回复 / PR</b><span>回原会话</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lane dim who-lt" id="lane-lt">
+    <div class="lhead"><h3>形状三 · Lauren Tan 的工作流（pstack 口径）</h3><span class="sub">反馈/需求 → 协调者 → 云端 subagent → 全新验证者 → 合并</span></div>
+    <div class="pipe-wrap" id="r-pipe">
+      <div class="wire"></div>
+      <div class="pipe">
+        <div class="node dim" id="l-trig"><b>反馈 / 需求</b><span>Slack / 会议 /  webhook</span></div>
+        <div class="node dim ev-a" id="l-coord"><b>协调者</b><span>不写代码，只指派</span></div>
+        <div class="node dim ev-a" id="l-sub"><b>云端 subagent</b><span>各自 VM + 分支</span></div>
+        <div class="node dim ev-a" id="l-ver"><b>全新验证者</b><span>换模型家族</span></div>
+        <div class="node dim" id="l-merge"><b>合并</b><span>一 PR 一 owner</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel note ev-a" id="note-coord">
+    <div class="ptag">pstack/docs/guide/07-overnight.md · 一手 · A</div>
+    <p class="quote">“<span class="en">The coordinator doesn't write code. It directs subagents, which run in the cloud by default</span>”</p>
+    <p class="plain">协调者只拆活、不写代码；subagent 默认在云端跑。中文为释义，英文为上引逐字原文。</p>
+  </div>
+  <div class="panel note ev-a" id="note-iso">
+    <div class="ptag">pstack/docs/guide/02-poteto-mode.md · 一手 · A</div>
+    <p class="quote">“<span class="en">The cleanest isolation is a cloud subagent. Each one gets its own VM and branch</span>”</p>
+    <p class="plain">最干净的隔离是云端 subagent：各自一台 VM、一条分支。</p>
+  </div>
+  <div class="panel note ev-a" id="note-verify">
+    <div class="ptag">pstack/docs/guide/06-verify-and-ship.md · 一手 · A</div>
+    <p class="quote">“<span class="en">the agent that judges a change is never the one that wrote it</span>”</p>
+    <p class="plain">评判改动的 agent，绝不是写这段代码的那个。</p>
+  </div>
+
+  <figure class="panel code ev-a" id="code-preset">
+    <figcaption><span class="src">src/app/sessions.ts:144-145 · agentPreset 按 role 选</span><span class="tag">A</span></figcaption>
+    <pre><code class="en">      await ctx.sessionController.create({ sessionId: id as SessionId, workspaceId: workspace.id,
+        agentPreset: role === 'worker' ? WORKER_PRESET : ROUTER_PRESET })</code></pre>
+    <div class="say">Session 是程序按 role 建的：worker 用 WORKER_PRESET，主会话用 ROUTER_PRESET。整数行高 <code>--code-lh:18px</code>。</div>
+  </figure>
+
+  <div class="align dim" id="align">
+    <div class="h">三种形状</div><div class="h q">谁触发</div><div class="h q">谁决策</div><div class="h q">谁验证</div>
+    <div class="c q0 who-dsh"><b>普通 dsh</b>同一会话</div>
+    <div class="c q0 who-dsh">人开口</div>
+    <div class="c q0 who-dsh">人（同一会话）</div>
+    <div class="c q0 who-dsh">人（同一会话）</div>
+    <div class="c q1 who-sa"><b>dsh-superagent</b>双层</div>
+    <div class="c q1 who-sa">Source → Trigger <span class="gchip a">A</span></div>
+    <div class="c q1 who-sa">gate() + Eval <span class="gchip a">A</span></div>
+    <div class="c q1 who-sa">Ticket / attention <span class="gchip a">A</span></div>
+    <div class="c q2 who-lt"><b>Lauren Tan</b>分工群</div>
+    <div class="c q2 who-lt">需求 / webhook <span class="gchip b">B</span></div>
+    <div class="c q2 who-lt">协调者 <span class="gchip a">A</span></div>
+    <div class="c q2 who-lt">全新验证者 <span class="gchip a">A</span></div>
+  </div>
+
+  <div class="card dim ev-b who-lt" id="grok-card">
+    <h3>Grok Bot 的产品形态 <span class="gchip b">B</span></h3>
+    <p><span class="en">Grok Bot is your team of always-on agents.</span><br>它是「始终在线」的一队 agent。</p>
+    <p style="margin-top:8px"><span class="en">Bots have their own computer.</span><br>每个 bot 有自己的云端 computer。</p>
+    <p style="margin-top:8px"><span class="en">They finish jobs end to end, and only come back when something needs your approval.</span><br>端到端做完，只在需要人批准时回来。</p>
+    <p style="margin-top:8px"><span class="gchip b">B</span> 归属版权行：<span class="en">© 2026 SpaceX Super Intelligence LLC</span><br>Grok Bot 归 SpaceXSI（原 xAI，2026-02 并入 SpaceX）；厂商声明，非工程实现。</p>
+    <p style="margin-top:8px"><span class="gchip b">B</span> 可得性事实：beta 于 2026-08-11 发布（面向 SuperGrok 与 Cursor 各档订阅者），1.0 于 2026-11-02 发布。厂商声明，非工程实现。</p>
+    <span class="vnote">来源：x.ai 产品与发布页 · 厂商声明，非工程实现 · B 级</span>
+  </div>
+
+  <div class="card dim ev-a who-lt" id="cursor-card" style="margin-top:12px">
+    <h3>它跑在 Cursor 平台上 <span class="gchip a">A</span> <span class="gchip b">B</span></h3>
+    <p><span class="gchip b">B</span> <span class="en">Grok Bot uses the same Cursor SSO, auth, and privacy mode you already trust. Your cloud computer is encrypted in transit and at rest, with training opt-out.</span><br>共享 Cursor 的订阅与 SSO / auth / privacy mode。厂商声明，非工程实现。</p>
+    <p style="margin-top:8px"><span class="gchip a">A</span> 下载域名 <code>api2.cursor.sh</code>；webhook 唤醒走 SKILL.md 原词 <b>webhook routine</b>；URL 形如 <code>https://api2.cursor.sh/automations/webhook/&lt;id&gt;</code>（路径可核事实，不是术语）。</p>
+    <div class="panel note ev-a" id="note-webhook" style="margin-top:10px">
+      <div class="ptag">cursor/plugins · pstack/skills/make-bot-ui/SKILL.md · 一手 · A</div>
+      <p class="quote">“<span class="en">A server on this computer POSTs JSON to a webhook routine. The bot wakes with that JSON.</span>”</p>
+      <p class="quote">“<span class="en">The local server, not the browser, POSTs to the Grok Bot webhook.</span>”</p>
+      <p class="plain">POST 到 webhook routine 的是本机 server，不是浏览器——bot 被这段 JSON 唤醒。插件仓原文用「webhook routine」，未把 automations 写成产品名。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 幕 2：十维对照 ============ -->
+<section class="scene" data-act="2" id="scene2">
+  <div class="scene-head">
+  <div class="eyebrow">幕 2 · 十个维度逐行对照</div>
+  <h2>同一维度，三种答案</h2>
+  <p class="sub">每行一步，三列同时高亮。每个判断都带 A/B/C 徽标；标 B 的判断注明「厂商声明，非工程实现」。</p>
+  </div>
+
+  <div class="cmp-head cmp4"><div>维度</div><div class="cold who-dsh">普通 dsh</div><div class="warm who-sa">dsh-superagent</div><div class="warm2 who-lt">Lauren Tan 工作流</div></div>
+  <div class="cmp">
+
+    <div class="cmp-row dim cmp4" id="dim-1">
+      <div>1 · 触发</div>
+      <div class="cell dsh who-dsh"><span class="gchip a">A</span>人开口</div>
+      <div class="cell sa who-sa"><span class="gchip a">A</span>事件源轮询（GitHub / 可选 Feishu）</div>
+      <div class="cell lt who-lt"><span class="gchip b">B</span>像对同事那样在 Slack/Teams/会议里派活<span class="vnote">厂商声明，非工程实现</span><span class="gchip a">A</span>或 webhook/routine 唤醒（一手插件文档）</div>
+    </div>
+
+    <div class="cmp-row dim cmp4" id="dim-2">
+      <div>2 · 谁决定做不做</div>
+      <div class="cell dsh who-dsh"><span class="gchip a">A</span>人</div>
+      <div class="cell sa who-sa"><span class="gchip a">A</span>程序层 <code>gate()</code> 纯函数先筛 + 模型 Eval；默认 <code>observe</code> 只记录</div>
+      <div class="cell lt who-lt"><span class="gchip c">C</span>协调者分发子任务；她文档里没有「优先级仲裁」的实现描述</div>
+    </div>
+
+    <div class="cmp-row dim cmp4" id="dim-3">
+      <div>3 · 决策与执行是否分权</div>
+      <div class="cell dsh who-dsh"><span class="gchip a">A</span>不分，同一会话</div>
+      <div class="cell sa who-sa"><span class="gchip a">A</span>两个 agent preset：Router 无 write/edit/subagent/todo</div>
+      <div class="cell lt who-lt"><span class="gchip a">A</span>协调者不写代码，只指派 subagent</div>
+    </div>
+
+    <div class="cmp-row dim cmp4" id="dim-4">
+      <div>4 · 隔离粒度</div>
+      <div class="cell dsh who-dsh"><span class="gchip a">A</span>同一 workspace</div>
+      <div class="cell sa who-sa"><span class="gchip a">A</span>每 Ticket 一个 Session + 一个目录</div>
+      <div class="cell lt who-lt"><span class="gchip a">A</span>每个 subagent 独立 VM + 独立分支；过夜用隔离 worktree</div>
+    </div>
+
+    <div class="cmp-row dim cmp4" id="dim-5">
+      <div>5 · 权限怎么给</div>
+      <div class="cell dsh who-dsh"><span class="gchip a">A</span>全给</div>
+      <div class="cell sa who-sa"><span class="gchip a">A</span>宿主层裁剪 + <span class="gchip b">B</span>Mandate（不可变授权凭证）<span class="vnote">Mandate 定义来自官方文档，厂商声明，非工程实现</span></div>
+      <div class="cell lt who-lt"><span class="gchip a">A</span>四个前置条件满足前只「看着它跑」；先 Autopilot-stack（人合并）再 Autopilot-full</div>
+    </div>
+
+    <div class="cmp-row dim cmp4" id="dim-6">
+      <div>6 · 验证算不算数</div>
+      <div class="cell dsh who-dsh"><span class="gchip a">A</span>无</div>
+      <div class="cell sa who-sa"><span class="gchip b">B</span>Mandate 接单 + Assignment 交付<span class="vnote">厂商声明，非工程实现</span><span class="gchip a">A</span>异常以 <code>attention</code> 上报（代码坐实）</div>
+      <div class="cell lt who-lt"><span class="gchip a">A</span>“<span class="en">&quot;It compiles&quot; is not evidence.</span>”；一 PR 一个 owner；审查者换模型家族且从未写过这段代码</div>
+    </div>
+
+    <div class="cmp-row dim cmp4" id="dim-7">
+      <div>7 · 完成条件</div>
+      <div class="cell dsh who-dsh"><span class="gchip a">A</span>人喊停</div>
+      <div class="cell sa who-sa"><span class="gchip a">A</span>Ticket 状态 ≠ Session 状态，可交接/重跑</div>
+      <div class="cell lt who-lt"><span class="gchip a">A</span>“<span class="en">a duration is not a finish condition</span>”</div>
+    </div>
+
+    <div class="cmp-row dim cmp4" id="dim-8">
+      <div>8 · 受阻怎么办</div>
+      <div class="cell dsh who-dsh"><span class="gchip a">A</span>人介入</div>
+      <div class="cell sa who-sa"><span class="gchip a">A</span>停下并以 <code>attention</code> 上报，等人/Router 决策</div>
+      <div class="cell lt who-lt"><span class="gchip a">A</span>停在真正的死路并写下原因，好过「8 小时的创造性目标曲解」（<span class="en">eight hours of creative goal reinterpretation</span>）</div>
+    </div>
+
+    <div class="cmp-row dim cmp4" id="dim-9">
+      <div>9 · 度量</div>
+      <div class="cell dsh who-dsh"><span class="gchip a">A</span>无</div>
+      <div class="cell sa who-sa"><span class="gchip c">C</span>文章给的消融数据（自述、仓内无脚本）</div>
+      <div class="cell lt who-lt"><span class="gchip a">A</span>公开材料只有「不要只追吞吐」（<span class="en">throughput without quality is not a goal i aspire to</span>）<span class="gchip c">C</span>具体指标（返工率/漏缺陷/单改动成本）无一手来源</div>
+    </div>
+
+    <div class="cmp-row dim cmp4" id="dim-10">
+      <div>10 · 形态</div>
+      <div class="cell dsh who-dsh"><span class="gchip a">A</span>CLI/TUI 里的工具</div>
+      <div class="cell sa who-sa"><span class="gchip a">A</span>常驻 bundle + Web panel（<code>3082</code>）</div>
+      <div class="cell lt who-lt"><span class="gchip a">A</span>插件 pstack（Cursor / Claude Code）<span class="gchip b">B</span>产品 Grok Bot（桌面 / iOS / Slack / Teams）<span class="vnote">产品形态为厂商声明，非工程实现</span></div>
+    </div>
+
+  </div>
+
+  <div class="cmp-panels">
+    <figure class="panel code ev-a" id="code-router">
+      <figcaption><span class="src">cordis.patch.yml:125-193 · router preset tool-fs</span><span class="tag">A</span></figcaption>
+      <pre><code class="en">          - id: tool-fs
+            name: '@deepseek-ai/dsh-tool-fs'
+            config:
+              write: false
+              edit: false</code></pre>
+      <div class="say">Router 的文件工具被宿主层裁成只读（write/edit 关闭）；整数行高 <code>--code-lh:18px</code>。</div>
+    </figure>
+  </div>
+
+</section>
+
+<!-- ============ 幕 3：三个真差异 ============ -->
+<section class="scene" data-act="3" id="scene3">
+  <div class="scene-head">
+  <div class="eyebrow">幕 3 · 三个真差异</div>
+  <h2>差异不在措辞，在机制</h2>
+  <p class="sub">左右并置；每步只讲一处真正不同的实现方式。所有判断按 A/B/C 标注。</p>
+  </div>
+
+  <div class="block dim" id="diff-1">
+    <div class="bhead"><h3>1 · 准入是程序还是人</h3><span class="sub">一边先过确定性矩阵，一边没有这个对象</span></div>
+    <div class="split">
+      <div class="card ev-a left who-sa"><span class="tagline">dsh-superagent · A</span>
+        <p>程序层 <code>gate()</code> 是纯函数、不调模型，查 3×2 准入矩阵，把每条事件判成 <code>explicit</code> / <code>inferred</code> / <code>ignore</code>，再交给模型 Eval。<code>src/policy.ts:167-211</code>。</p>
+        <pre class="mini">export type Admission = 'explicit' | 'inferred' | 'ignore'
+export const ADMISSION_OPTIONS = { listedUnaddressed: ['inferred', 'ignore'], unlistedAddressed: ['explicit', 'inferred', 'ignore'],
+  unlistedUnaddressed: ['inferred', 'ignore'] } as const satisfies Record&lt;AdmissionCell, readonly Admission[]&gt;</pre>
+      </div>
+      <div class="card ev-c right who-lt"><span class="tagline">Lauren Tan 工作流 · C</span>
+        <p>准入由协调者 / 人决定：文档要求人先看清再放权，但没有「准入矩阵」这样的对象，也没有对应的状态机实现可查——她文档里不存在这个对象（C）。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block dim" id="diff-2">
+    <div class="bhead"><h3>2 · 审查者是不是独立实体</h3><span class="sub">一边有专门的审查 agent，一边没有这个角色</span></div>
+    <div class="split">
+      <div class="card ev-a left who-sa"><span class="tagline">dsh-superagent · A</span>
+        <p>Eval 判断的是「该不该接单」，不是代码审查。<code>orchestrator_*</code> 工具面里没有独立审查角色（<code>src/app/tools/main.ts:125-153</code>、<code>:223-239</code>）。</p>
+      </div>
+      <div class="card ev-a right who-lt"><span class="tagline">Lauren Tan 工作流 · A</span>
+        <p>“<span class="en">the agent that judges a change is never the one that wrote it</span>”<br>评判改动的 agent 从未写过这段代码。</p>
+        <p>“<span class="en">it spawns a reviewer on a different model family</span>”<br>审查者换一个模型家族。两句均出自 <code>06-verify-and-ship.md</code>。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block dim" id="diff-3">
+    <div class="bhead"><h3>3 · 状态机 vs 经验清单</h3><span class="sub">一边是可查对象，一边是文档化规矩</span></div>
+    <div class="split">
+      <div class="card ev-a left who-sa"><span class="tagline">dsh-superagent · A</span>
+        <p><code>Mandate</code>（不可变授权）、<code>Subscription</code>（Thread↔Ticket 多对多）、<code>Ticket</code>（自带状态机）都是领域里的可查对象，定义见 <code>docs/001-domain.md</code>。</p>
+      </div>
+      <div class="card ev-a right who-lt"><span class="tagline">Lauren Tan 工作流 · A</span>
+        <p>pstack 给的是 24 条原则 + 22 个 playbook：文档化规矩，靠 agent 遵守；没有强制状态机，也没有「工单」这样的运行时对象。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 幕 4：两边共同的硬规矩 ============ -->
+<section class="scene" data-act="4" id="scene4">
+  <div class="scene-head">
+  <div class="eyebrow">幕 4 · 两边共同的硬规矩</div>
+  <h2>形状不同，底线相同</h2>
+  <p class="sub">三条两边都认的规矩；左右并置，正面收束。</p>
+  </div>
+
+  <div class="block dim" id="rule-1">
+    <div class="bhead"><h3>1 · 证据先行</h3><span class="sub">说了不算，跑出来才算</span></div>
+    <div class="split">
+      <div class="card ev-a left who-lt"><span class="tagline">Lauren Tan · A</span>
+        <p>“<span class="en">&quot;It compiles&quot; is not evidence.</span>”<br>「能编译」不是证据；要在运行中的应用里验证真实行为。<code>06-verify-and-ship.md</code>。</p>
+      </div>
+      <div class="card ev-a right who-sa"><span class="tagline">dsh-superagent · A</span>
+        <p>程序层 <code>gate()</code> 先筛（<code>src/policy.ts:167-211</code>）；对外只有 answer / result / <code>attention</code> 三种用途，进度不许外发（<code>src/app/tools/main.ts:223-239</code>）。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block dim" id="rule-2">
+    <div class="bhead"><h3>2 · 时间不是完成条件</h3><span class="sub">「跑了多久」不等于「做完了」</span></div>
+    <div class="split">
+      <div class="card ev-a left who-lt"><span class="tagline">Lauren Tan · A</span>
+        <p>“<span class="en">a duration is not a finish condition</span>”<br>可检查的完成条件，而不是「跑 8 小时」。<code>07-overnight.md</code>。</p>
+      </div>
+      <div class="card ev-a right who-sa"><span class="tagline">dsh-superagent · A</span>
+        <p><code>Ticket</code> 由 Eval 创建、带不可变 <code>Mandate</code>（接单凭证），状态自己定义、不跟随 Session；完成看状态而非时长（<code>docs/001-domain.md</code>）。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block dim" id="rule-3">
+    <div class="bhead"><h3>3 · 渐进放权</h3><span class="sub">先看着它跑，再逐步松手</span></div>
+    <div class="split">
+      <div class="card ev-a left who-sa"><span class="tagline">dsh-superagent · A</span>
+        <p>默认 <code>accept mode: observe</code>（只记录不执行），再开到 <code>auto</code>；代码默认值见 <code>src/policy.ts:84</code>。</p>
+      </div>
+      <div class="card ev-a right who-lt"><span class="tagline">Lauren Tan · A</span>
+        <p>“<span class="en">Autopilot-stack is Autopilot-full without the merge. You wake up to verified PRs, each with its verdict, and you review and land them yourself.</span>”<br>先 Autopilot-stack（人合并），再 Autopilot-full。<code>07-overnight.md</code>。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 幕 5：不能外推 ============ -->
+<section class="scene" data-act="5" id="scene5">
+  <div class="scene-head">
+  <div class="eyebrow">幕 5 · 不能外推</div>
+  <h2>核过的边界，与不该跨过的边界</h2>
+  <p class="sub">这一幕收的是限制：哪些是本人表述或厂商口径，哪些是仓内 grep 的空白。整体按 C（虚线）呈现，厂商产品页单独标 B。</p>
+  </div>
+
+  <div class="block dim" id="limit-1">
+    <div class="bhead"><h3>1 · 她的数字与产品口径</h3><span class="sub">本人表述 ≠ 可复现数据；产品页 ≠ 工程实现</span></div>
+    <div class="split">
+      <div class="card ev-c caution left who-lt"><span class="tagline">Lauren Tan 的数字 · C</span>
+        <p>“<span class="en">2,500 PRs last month to production</span>” 是她 2026-09-21 的本人表述（<code>@poteto</code>）。没给时间范围，没说明是否含 bot 开的 PR，无可复现数据 → C。</p>
+      </div>
+      <div class="card ev-b right who-lt"><span class="tagline">Grok Bot 产品页 · B</span>
+        <p>「always-on / 自己电脑 / 端到端」出自厂商产品与发布页，例如 “<span class="en">Grok Bot is your team of always-on agents.</span>”。这是厂商声明，非工程实现。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block dim" id="limit-2">
+    <div class="bhead"><h3>2 · super-agent 的未来方向</h3><span class="sub">文章讲了，原型仓 grep 0 命中</span></div>
+    <div class="card ev-c who-sa" style="margin:0"><span class="tagline" style="color:var(--c)">原型仓 · C</span>
+      <p>Watchdog / 投机执行 / Router 分片 / 全双工 <code>start()/stop()</code> / Inline&amp;Spill / 存算分离：六项在原型仓 grep 均无命中，仓内无实现证据 → C。数据取自 <code>RESEARCH.md</code> §6。</p>
+    </div>
+  </div>
+
+  <div class="block dim" id="limit-3">
+    <div class="bhead"><h3>3 · 两者不是同类竞品</h3><span class="sub">研究原型 vs 商业产品</span></div>
+    <div class="split">
+      <div class="card ev-a left who-sa"><span class="tagline">dsh-superagent · A</span>
+        <p>研究原型：<code>private: true</code>（未发 npm），<code>engines.dsh ^0.2.1-alpha.2</code> —— 代码事实 <span class="gchip a">A</span>。README 自述 “<span class="en">Research prototype for reference only, not an official DeepSeek product.</span>” <span class="gchip b">B</span></p>
+      </div>
+      <div class="card ev-b right who-lt"><span class="tagline">Grok Bot · B</span>
+        <p>商业产品：个人档 Premium $30 / Super $100 / Ultra $200 每月，Enterprise GA、Teams plan 可用。厂商声明，非工程实现。</p>
+      </div>
+    </div>
+    <div class="concl">本页比的是<b>机制</b>，不是产品评分。可借鉴的三条：<b>独立验证者</b>、<b>可检查的完成条件</b>、<b>渐进放权</b>。</div>
+  </div>
+</section>
+
+</main>
+
+<div class="pagefoot">
+  <span>pstack：她 Cursor 时期的产物 · MIT · 托管在 <code>cursor/plugins</code> · v0.15.43</span>
+  <span>她现在属 SpaceXSI（原 xAI）的 Grok Bot 团队</span>
+  <span>本页是机制对照，不是同类竞品评测</span>
+  <span>底稿：<code>RESEARCH.md</code> · <code>GROKBOT-RESEARCH.md</code> · <code>VERIFY-2.md</code></span>
+  <details>
+    <summary>证据与来源</summary>
+    <div class="body">
+      <p>底稿：<code>/Users/qingguee/repo/super-agent-explainer/RESEARCH.md</code>（A11/B4/C2） · <code>/Users/qingguee/repo/super-agent-explainer/GROKBOT-RESEARCH.md</code> · <code>/Users/qingguee/repo/super-agent-explainer/VERIFY-2.md</code></p>
+      <p>英文引用取自 pstack 文档与 x.ai 官方页面，逐字节比对。</p>
+      <p>本页不采用任何第三方二手整理的说法。</p>
+    </div>
+  </details>
+  <details>
+    <summary>来源 URL（纯文本，不作外链）</summary>
+    <div class="body">
+      <p>pstack README： https://github.com/cursor/plugins/blob/main/pstack/README.md</p>
+      <p>pstack guide 06/07/02： https://github.com/cursor/plugins/blob/main/pstack/docs/guide/06-verify-and-ship.md · https://github.com/cursor/plugins/blob/main/pstack/docs/guide/07-overnight.md · https://github.com/cursor/plugins/blob/main/pstack/docs/guide/02-poteto-mode.md</p>
+      <p>make-bot-ui： https://github.com/cursor/plugins/blob/main/pstack/skills/make-bot-ui/SKILL.md</p>
+      <p>Grok Bot 产品页与发布页： https://x.ai/bot · https://x.ai/news/introducing-grok-bot</p>
+      <p>Lauren Tan 的 X： https://x.com/poteto</p>
+    </div>
+  </details>
+</div>
+
+<footer class="hud">
+  <div class="bar"><i id="bar"></i></div>
+  <div class="hudrow">
+    <div class="steptext" aria-live="polite"><b id="stitle">—</b><span id="sdesc">—</span></div>
+    <div class="ctl">
+      <span class="allchip" id="allchip">全部展开</span>
+      <button class="nav" id="prev" aria-label="上一步">上一步</button>
+      <button class="nav" id="next" aria-label="下一步">下一步</button>
+      <span class="count" id="count">—</span>
+    </div>
+  </div>
+  <div class="hint"><kbd>→</kbd>/<kbd>Space</kbd> 下一步 · <kbd>←</kbd> 上一步 · <kbd>1</kbd>-<kbd>6</kbd> 跳幕 · <kbd>A</kbd> 全部展开 · <kbd>Home</kbd> 回首幕</div>
+</footer>
+
+<script>
+(function(){
+  var SCENES = [
+    { id:'cover', nav:'封面', steps:[
+      { t:'三种形状', d:'普通 dsh / dsh-superagent / Lauren Tan 的工作流：同一个目标的三种系统形状。', lit:['#cv-kicker','#cv-title','#cv-sub'] },
+      { t:'三列徽章', d:'单会话 / 事件驱动双层 / pstack + Grok Bot —— 本篇要对照的三条线。', lit:['#cv-shapes'] },
+      { t:'人物卡 · Lauren Tan（@poteto）', d:'现 Grok Bot 团队 @ SpaceXSI，前 Cursor / Meta / Netflix；引她 pstack README 自述原句。', lit:['#cv-person','#cv-quote','#cv-legend'] }
+    ]},
+    { id:'shapes', nav:'三种形状', steps:[
+      { t:'1 · 普通 dsh', d:'人输入 → 单会话 → 工具 → 回复 → 空闲；所有事落在同一条线。', lit:['#p-n1','#p-n2','#p-n3','#p-n4','#p-n5'] },
+      { t:'2 · dsh-superagent', d:'事件源轮询 → gate() 纯函数 → Eval → Ticket → Worker Session（worker-<id> + 独立目录）→ 回复/PR。', lit:['#s-src','#s-trg','#s-gate','#s-eval','#s-tkt','#s-wrk','#s-out'], panel:['#code-preset'] },
+      { t:'3 · Lauren Tan（pstack 口径）', d:'反馈/需求 → 协调者 → 云端 subagent → 全新验证者 → 合并；三条一手引文逐字给出。', lit:['#l-trig','#l-coord','#l-sub','#l-ver','#l-merge'], panel:['#note-coord','#note-iso','#note-verify'] },
+      { t:'4 · 三线合一', d:'把三条线按「谁触发 / 谁决策 / 谁验证」横向对齐；A/B 徽标随节点。', lit:['#align'] },
+      { t:'5 · Grok Bot 产品形态（B）', d:'始终在线的 agent、各有 computer、端到端收尾——厂商产品页口径，非工程实现。', lit:['#grok-card'] },
+      { t:'6 · 跑在 Cursor 平台上（A/B）', d:'共享 Cursor 订阅与 SSO/auth/privacy mode；下载走 api2.cursor.sh；webhook 唤醒走原文词 webhook routine。', lit:['#cursor-card'], panel:['#note-webhook'] }
+    ]},
+    { id:'compare', nav:'十维对照', steps:[
+      { t:'1 · 触发', d:'人开口 / 事件源轮询 / 像派同事那样派活或 webhook 唤醒。', lit:['#dim-1'] },
+      { t:'2 · 谁决定做不做', d:'人 / gate()+Eval / 协调者分发（无「优先级仲裁」实现描述，C）。', lit:['#dim-2'] },
+      { t:'3 · 决策与执行是否分权', d:'不分 / 两个 preset / 协调者不写代码只指派。', lit:['#dim-3'] },
+      { t:'4 · 隔离粒度', d:'同一 workspace / 每 Ticket 一 Session 一目录 / 每 subagent 独立 VM + 分支。', lit:['#dim-4'] },
+      { t:'5 · 权限怎么给', d:'全给 / 宿主层裁剪 + Mandate / 四个前置条件前只看着它跑，Autopilot-stack 再 full。', lit:['#dim-5'] },
+      { t:'6 · 验证算不算数', d:'无 / Mandate+Assignment+attention / 「It compiles 不是证据」+ 新验证者换模型家族。', lit:['#dim-6'] },
+      { t:'7 · 完成条件', d:'人喊停 / Ticket 状态≠Session 状态 / duration 不是完成条件。', lit:['#dim-7'] },
+      { t:'8 · 受阻怎么办', d:'人介入 / 停下以 attention 上报 / 停在真死路并写下原因，别做八小时目标曲解。', lit:['#dim-8'] },
+      { t:'9 · 度量', d:'无 / 文章消融数据（C）/ 只强调不要只追吞吐，具体指标无一手来源（C）。', lit:['#dim-9'] },
+      { t:'10 · 形态', d:'CLI/TUI 工具 / 常驻 bundle + panel(3082) / pstack 插件 + Grok Bot 产品。', lit:['#dim-10'], panel:['#code-router'] }
+    ]},
+    { id:'realdiff', nav:'真差异', steps:[
+      { t:'1 · 准入是程序还是人', d:'super-agent 有 gate() 确定性矩阵先筛；她的工作流由协调者/人决定，没有对应状态机对象（C）。', lit:['#diff-1'] },
+      { t:'2 · 审查者是不是独立实体', d:'她要求 judges 与 wrote 不是同一个 agent 且换模型家族（A）；原型的 Eval 只判「接不接单」，无独立审查角色（A）。', lit:['#diff-2'] },
+      { t:'3 · 状态机 vs 经验清单', d:'Mandate / Subscription / Ticket 是可查对象（A）；她给的是 24 条原则 + 22 个 playbook，靠 agent 遵守（A）。', lit:['#diff-3'] }
+    ]},
+    { id:'rules', nav:'共同规矩', steps:[
+      { t:'1 · 证据先行', d:'「It compiles 不是证据」↔ 程序层 gate() + attention 上报（A/A）。', lit:['#rule-1'] },
+      { t:'2 · 时间不是完成条件', d:'「duration 不是完成条件」↔ Ticket 有接单凭证与状态（A/A）。', lit:['#rule-2'] },
+      { t:'3 · 渐进放权', d:'observe → auto ↔ 先 Autopilot-stack 人合并，再 Autopilot-full（A/A）。', lit:['#rule-3'] }
+    ]},
+    { id:'limits', nav:'不能外推', steps:[
+      { t:'1 · 她的数字与产品口径', d:'「2,500 PRs last month」（本人表述，无口径无审计，C）；产品页 always-on/自己电脑/端到端（厂商声明，B）。', lit:['#limit-1'] },
+      { t:'2 · super-agent 的未来方向', d:'Watchdog / 投机执行 / Router 分片 / 全双工 / Inline&Spill / 存算分离：原型仓 grep 0 命中（C）。', lit:['#limit-2'] },
+      { t:'3 · 两者不是同类竞品', d:'研究原型（private、未发 npm）vs 商业产品（$30/$100/$200）；比的是机制，不是评分。', lit:['#limit-3'] }
+    ]}
+  ];
+
+  var sceneEls = Array.prototype.slice.call(document.querySelectorAll('.scene'));
+  var dotsBox = document.getElementById('dots');
+  var bar = document.getElementById('bar');
+  var stitle = document.getElementById('stitle');
+  var sdesc = document.getElementById('sdesc');
+  var count = document.getElementById('count');
+  var prevBtn = document.getElementById('prev');
+  var nextBtn = document.getElementById('next');
+  var allchip = document.getElementById('allchip');
+  var si = 0, ki = 0, allOn = false;
+
+  SCENES.forEach(function(s, i){
+    var b = document.createElement('button');
+    b.className = 'dot';
+    b.type = 'button';
+    b.textContent = String(i);
+    b.title = '幕 ' + i + ' · ' + s.nav;
+    b.setAttribute('aria-label', '跳到幕 ' + i + ' ' + s.nav);
+    b.addEventListener('click', function(){ go(i, 0); });
+    dotsBox.appendChild(b);
+  });
+  var dotEls = Array.prototype.slice.call(dotsBox.children);
+
+  function totalSteps(){
+    return SCENES.reduce(function(n, s){ return n + s.steps.length; }, 0);
+  }
+  function globalIndex(){
+    var n = 0;
+    for (var i = 0; i < si; i++) n += SCENES[i].steps.length;
+    return n + ki;
+  }
+  function litOf(step){ return (step && step.lit) || []; }
+
+  function render(hash){
+    var sc = SCENES[si], steps = sc.steps;
+    sceneEls.forEach(function(el, i){ el.classList.toggle('on', i === si); });
+    document.body.setAttribute('data-act', String(si));
+    dotEls.forEach(function(el, i){
+      el.classList.toggle('on', i === si);
+      el.setAttribute('aria-current', i === si ? 'true' : 'false');
+    });
+
+    var lit = new Set();
+    var upto = allOn ? steps.length - 1 : ki;
+    for (var i = 0; i <= upto; i++) litOf(steps[i]).forEach(function(sel){ lit.add(sel); });
+    sceneEls[si].querySelectorAll('.dim').forEach(function(el){ el.classList.remove('on'); });
+    lit.forEach(function(sel){
+      var el = document.querySelector(sel);
+      if (el && sceneEls[si].contains(el)) el.classList.add('on');
+    });
+
+    sceneEls.forEach(function(sc){
+      Array.prototype.slice.call(sc.querySelectorAll('.cur')).forEach(function(el){ el.classList.remove('cur'); });
+    });
+    if (!allOn){
+      (litOf(steps[ki]) || []).forEach(function(sel){
+        var el = document.querySelector(sel);
+        if (el && sceneEls[si].contains(el)) el.classList.add('cur');
+      });
+    }
+
+    var wrap = sceneEls[si].querySelector('.pipe-wrap');
+    if (wrap){
+      var nodes = wrap.querySelectorAll('.node');
+      var on = 0;
+      nodes.forEach(function(n){ if (n.classList.contains('on')) on++; });
+      var p = nodes.length > 1 ? Math.max(on - 1, 0) / (nodes.length - 1) : 0;
+      wrap.style.setProperty('--p', String(p));
+    }
+
+    document.querySelectorAll('.panel').forEach(function(el){ el.classList.remove('on'); });
+    var panels = (steps[ki] && steps[ki].panel) || [];
+    panels.forEach(function(sel){
+      var el = document.querySelector(sel);
+      if (el && sceneEls[si].contains(el)) el.classList.add('on');
+    });
+
+    stitle.textContent = steps[ki].t;
+    sdesc.textContent = steps[ki].d;
+    count.textContent = '幕 ' + si + ' · 步 ' + (ki + 1) + '/' + steps.length;
+    bar.style.width = (((globalIndex() + 1) / totalSteps()) * 100).toFixed(2) + '%';
+    prevBtn.disabled = (si === 0 && ki === 0);
+    nextBtn.disabled = (si === SCENES.length - 1 && ki === steps.length - 1);
+    allchip.classList.toggle('on', allOn);
+    if (!hash) {
+      var h = '#' + si + '-' + (ki + 1);
+      try { history.replaceState(null, '', h); } catch (e) { try { location.hash = h; } catch (e2) {} }
+    }
+    fitScene();
+    ensureVisible();
+  }
+
+  function fitScene(){
+    var sc = document.querySelector('.scene.on');
+    if (!sc) return;
+    sc.classList.remove('fit');
+    if (sc.scrollHeight <= sc.clientHeight + 1) sc.classList.add('fit');
+  }
+
+  function syncChrome(){
+    var tb = document.querySelector('.topbar'), hud = document.querySelector('.hud');
+    var root = document.documentElement.style;
+    if (tb) root.setProperty('--tb', Math.round(tb.getBoundingClientRect().height) + 'px');
+    if (hud) root.setProperty('--hb', Math.round(hud.getBoundingClientRect().height) + 'px');
+  }
+
+  function ensureVisible(){
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var narrow = vw <= 720;
+    var cum = Array.prototype.slice.call(document.querySelectorAll('.scene.on .dim.on'));
+    var pans = Array.prototype.slice.call(document.querySelectorAll('.panel.on'));
+    var cur = [];
+    (litOf(SCENES[si].steps[ki]) || []).forEach(function(sel){
+      var el = document.querySelector(sel);
+      if (el && sceneEls[si].contains(el)) cur.push(el);
+    });
+    cur = cur.concat(pans);
+    var list = (cur.length ? cur : cum).concat(pans);
+    list = list.filter(function(el, i){ return list.indexOf(el) === i; });
+    if (!list.length) return;
+    var top = Infinity, bottom = -Infinity, outX = false;
+    list.forEach(function(el){
+      var r = el.getBoundingClientRect();
+      if (!r.width && !r.height) return;
+      if (r.top < top) top = r.top;
+      if (r.bottom > bottom) bottom = r.bottom;
+      if (r.left < 0 || r.right > vw) outX = true;
+    });
+    if (top === Infinity) return;
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var behavior = reduce ? 'auto' : 'smooth';
+    var tb = document.querySelector('.topbar'), hud = document.querySelector('.hud');
+    var availTop = (tb ? Math.round(tb.getBoundingClientRect().height) : 56) + 8;
+    var availBottom = vh - (hud ? Math.round(hud.getBoundingClientRect().height) : 116) - 8;
+    var fits = (bottom - top) <= (availBottom - availTop);
+    var dy = 0;
+    if (top > availBottom - 40) dy = top - availTop;
+    else if (top < availTop) dy = top - availTop;
+    else if (bottom > availBottom && fits) dy = bottom - availBottom;
+
+    // 幕头整块二值可见：.scene-head（eyebrow + h1/h2 + 副标题）必须完整可见或完整在视口外，
+    // 不允许被顶栏切半行（小字 eyebrow 与标题必须同进同出）。
+    // 仅当按 lit 滚动后幕头落在「部分可见」区间时修正：优先把幕头完整滚进安全区
+    // （前提是当前步 lit 仍完整可见），否则把幕头完整推到顶栏之上。
+    var tbBottom = tb ? Math.round(tb.getBoundingClientRect().bottom) : 56;
+    var head = sceneEls[si].querySelector('.scene-head');
+    if (head){
+      var hr = head.getBoundingClientRect();
+      if (hr.height > 0){
+        var nTop = hr.top - dy, nBot = hr.bottom - dy;
+        var fullIn = nTop >= tbBottom - 0.5 && nBot <= availBottom + 0.5;
+        var fullUp = nBot <= tbBottom + 0.5;
+        var fullDown = nTop >= availBottom - 0.5;
+        if (!fullIn && !fullUp && !fullDown){
+          var showDy = hr.top - (tbBottom + 12);
+          var litFits = (top - showDy >= availTop - 2) && (bottom - showDy <= availBottom + 2);
+          dy = litFits ? showDy : (hr.bottom - tbBottom + 2);
+        }
+      }
+    }
+    // 幕 2：列头吸顶后，若滚动落点让当前行顶部落到吸顶条背后，少滚一点把行让出来。
+    // 放在幕头二值判定之后，避免改变幕头的全显/全隐结论。
+    var cmpHead = narrow ? null : sceneEls[si].querySelector('.cmp-head');
+    if (cmpHead && head){
+      var chH = cmpHead.getBoundingClientRect().height;
+      // 列头已吸顶时其 rect.top 恒为 tb，须用幕头底边还原未吸顶的自然位置
+      var chNaturalTop = head.getBoundingClientRect().bottom;
+      var chTopAfter = chNaturalTop - dy;
+      var chBottomAfter = (chTopAfter <= tbBottom + 0.5) ? tbBottom + chH : chTopAfter + chH;
+      if (top - dy < chBottomAfter - 0.5) dy = top - chBottomAfter;
+    }
+    if (Math.abs(dy) > 1) window.scrollBy({ top: dy, behavior: behavior });
+    if (outX){
+      for (var i = 0; i < list.length; i++){
+        var r2 = list[i].getBoundingClientRect();
+        if (r2.left < 0 || r2.right > vw){
+          list[i].scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduce ? 'auto' : 'smooth' });
+          break;
+        }
+      }
+    }
+  }
+
+  function go(s, k){
+    si = Math.max(0, Math.min(SCENES.length - 1, s));
+    ki = Math.max(0, Math.min(SCENES[si].steps.length - 1, k));
+    allOn = false;
+    render(false);
+  }
+  function next(){
+    var steps = SCENES[si].steps;
+    if (ki < steps.length - 1) ki++;
+    else if (si < SCENES.length - 1) { si++; ki = 0; }
+    else return;
+    allOn = false; render(false);
+  }
+  function prev(){
+    if (ki > 0) ki--;
+    else if (si > 0) { si--; ki = SCENES[si].steps.length - 1; }
+    else return;
+    allOn = false; render(false);
+  }
+
+  prevBtn.addEventListener('click', prev);
+  nextBtn.addEventListener('click', next);
+
+  document.addEventListener('keydown', function(e){
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var k = e.key;
+    if (k === 'ArrowRight' || k === ' ' || k === 'Spacebar') { e.preventDefault(); next(); }
+    else if (k === 'ArrowLeft') { e.preventDefault(); prev(); }
+    else if (k === 'Home') { e.preventDefault(); go(0, 0); }
+    else if (k === 'a' || k === 'A') { allOn = !allOn; render(false); }
+    else if (/^[1-6]$/.test(k)) { e.preventDefault(); go(Number(k) - 1, 0); }
+  });
+
+  function fromHash(){
+    var m = /^#(\d+)-(\d+)$/.exec(location.hash || '');
+    if (!m) return false;
+    var s = Number(m[1]), k = Number(m[2]) - 1;
+    if (!(s >= 0 && s < SCENES.length)) return false;
+    if (!(k >= 0 && k < SCENES[s].steps.length)) return false;
+    si = s; ki = k;
+    return true;
+  }
+
+  syncChrome();
+  window.addEventListener('resize', function(){ syncChrome(); });
+  if (fromHash()) render(true); else render(false);
+  window.addEventListener('hashchange', function(){
+    if (fromHash()) { allOn = false; render(true); }
+  });
+})();
+</script>
+</body>
+</html>
